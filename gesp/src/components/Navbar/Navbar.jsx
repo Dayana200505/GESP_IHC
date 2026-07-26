@@ -65,7 +65,6 @@ function Navbar() {
         {open && (
           <div className="avatar-menu">
             <NavLink to="/perfil">Mi Perfil</NavLink>
-            <a href="#">Configuración</a>
             <a href="#">Cerrar sesión</a>
           </div>
         )}
