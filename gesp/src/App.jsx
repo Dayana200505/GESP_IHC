@@ -1,6 +1,13 @@
+import Navbar from "./components/Navbar/Navbar";
+
 function App() {
+
   return (
-    <h1>GESP</h1>
+    <div style={{ paddingTop: "64px" }}>
+
+      <Navbar />
+
+    </div>
   );
 }
 

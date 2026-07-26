@@ -1,0 +1,81 @@
+.navbar{
+    width:100%;
+    height:64px;
+
+    background:#111827;
+
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+
+    padding:0 24px;
+
+    border-radius:0;
+
+    box-sizing:border-box;
+
+    position:fixed;
+    top:0;
+    left:0;
+    right:0;
+    z-index:1000;
+}
+
+.navbar-logo h1{
+    color:white;
+
+    font-size:2rem;
+
+    font-weight:700;
+}
+
+.navbar-links{
+    list-style:none;
+
+    display:flex;
+
+    gap:24px;
+
+    align-items:center;
+}
+
+.navbar-links a{
+
+    text-decoration:none;
+
+    color:white;
+
+    font-size:17px;
+
+    transition:.25s;
+}
+
+.navbar-links a:hover{
+
+    color:#22C55E;
+}
+
+.active-link{
+
+    color:#22C55E !important;
+
+    font-weight:600;
+}
+
+.navbar-profile img{
+
+    width:40px;
+
+    height:40px;
+
+    border-radius:50%;
+
+    object-fit:cover;
+
+    cursor:pointer;
+}
+
+/* Remove default page margin so navbar sits flush */
+body{
+    margin:0;
+}
