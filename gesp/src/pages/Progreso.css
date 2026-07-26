@@ -1,0 +1,47 @@
+.progreso-page{
+  padding:20px 28px 28px 28px;
+}
+
+.page-header h1{font-size:24px;font-weight:800;margin:0 0 16px 0;color:var(--navy)}
+
+.summary-cards{display:flex;gap:12px}
+.card-stat{flex:1;background:#fff;border:1px solid #e6f9ec;border-radius:12px;padding:12px;text-align:left}
+.stat-title{color:var(--muted);font-size:13px}
+.stat-value{font-size:20px;font-weight:800;margin-top:6px}
+
+.overall-card{display:flex;justify-content:space-between;align-items:center;background:#fff;border:1px solid #e6f9ec;padding:18px;border-radius:12px;margin-top:16px}
+.overall-title{font-weight:700}
+.overall-sub{color:#6b7280;font-size:13px;margin-top:6px}
+.bar{background:#eef6f1;height:16px;border-radius:999px;margin-top:10px;overflow:hidden}
+.bar-fill{height:100%;background:var(--emerald-strong);border-radius:999px}
+.overall-right{font-weight:800;color:var(--emerald)}
+
+.filters-row{display:flex;gap:12px;margin-top:14px}
+.filter-chip{padding:8px 12px;border-radius:999px;border:1px solid #e6f6ee;background:transparent;cursor:pointer}
+.filter-chip.active{background:var(--light-green);border-color:#c9f5d9;color:var(--emerald-strong);font-weight:700}
+
+.exercise-list{margin-top:18px;display:flex;flex-direction:column;gap:12px;max-height:56vh;overflow-y:auto;padding-right:6px}
+.exercise-card{display:flex;justify-content:space-between;align-items:center;padding:12px;border-radius:12px;border:1px solid #eaf9f0;background:#fff}
+.exercise-main{display:flex;gap:12px;align-items:flex-start}
+.ex-index{font-weight:700;color:var(--emerald)}
+.ex-title{font-weight:700}
+.ex-desc{color:#6b7280;font-size:14px;margin-top:6px}
+
+.exercise-meta{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.difficulty{padding:6px 10px;border-radius:999px;font-weight:700}
+.difficulty.difícil{background:#f3e8ff;color:#6b21a8}
+.difficulty.intermedio{background:#fff7ed;color:#92400e}
+.difficulty.fácil{background:#ecfdf5;color:#06533b}
+
+.small-bar{width:200px;background:#eef6f1;height:10px;border-radius:999px;overflow:hidden}
+.small-fill{height:100%;background:var(--emerald)}
+
+.status{padding:8px 12px;border-radius:999px;border:1px solid transparent;background:transparent;cursor:pointer}
+.status.done{background:#ecfdf5;border-color:#cfeee0}
+.status.progress{background:#f0fdf4;border-color:var(--emerald-strong);box-shadow:0 0 0 3px rgba(34,197,94,0.06)}
+
+@media (max-width:900px){
+  .progreso-page{padding:16px}
+  .summary-cards{flex-direction:column}
+  .exercise-list{max-height:40vh}
+}

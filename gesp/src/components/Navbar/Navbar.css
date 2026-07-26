@@ -2,7 +2,7 @@
     width:100%;
     height:64px;
 
-    background:#111827;
+    background:var(--navy);
 
     display:flex;
     justify-content:space-between;
@@ -22,11 +22,9 @@
 }
 
 .navbar-logo h1{
-    color:white;
-
-    font-size:2rem;
-
-    font-weight:700;
+    color:#fff;
+    font-size:22px;
+    font-weight:800;
 }
 
 .navbar-links{
@@ -43,9 +41,8 @@
 
     text-decoration:none;
 
-    color:white;
-
-    font-size:17px;
+    color:#fff;
+    font-size:14px;
 
     transition:.25s;
 }
@@ -57,8 +54,7 @@
 
 .active-link{
 
-    color:#22C55E !important;
-
+    color:var(--emerald-strong) !important;
     font-weight:600;
 }
 
@@ -79,3 +75,9 @@
 body{
     margin:0;
 }
+
+/* avatar dropdown */
+.avatar-dropdown{position:relative}
+.avatar-menu{position:absolute;right:0;top:56px;background:#fff;border:1px solid #e6f9ec;border-radius:8px;padding:8px;min-width:180px;box-shadow:0 8px 20px rgba(2,6,23,0.08)}
+.avatar-menu a{display:block;padding:8px 10px;border-radius:6px;color:#0f1724}
+.avatar-menu a:hover{background:var(--light-green)}
