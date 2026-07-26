@@ -120,7 +120,10 @@ function Recursos() {
 
   return (
     <div className="recursos-page">
-      <div className="page-header"><h1>Recursos</h1></div>
+      <div className="page-header">        <div>
+          <h1>Material de apoyo</h1>
+          <div className="subtitle">Comparte documentos y enlaces útiles para aprender Programación Funcional con Haskell.</div>
+        </div></div>
       <div className="recursos-grid">
         <div className="recursos-left">
         <h3>Compartir recurso</h3>
