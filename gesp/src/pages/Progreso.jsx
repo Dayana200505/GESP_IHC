@@ -34,7 +34,12 @@ function Progreso(){
 
   return (
     <div className="progreso-page">
-      <div className="page-header"><h1>Mi Progreso</h1></div>
+      <div className="page-header">
+        
+                <div>
+          <h1>Mi progreso</h1>
+          <div className="subtitle">Ejercicios ordenados de fácil a difícil para dominar Haskell.</div>
+        </div></div>
 
       <div className="summary-cards">
         <div className="card-stat">
