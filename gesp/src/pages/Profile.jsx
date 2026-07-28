@@ -1,28 +1,25 @@
-import React, { useState } from "react";
+﻿import React from "react";
+import { useNavigate } from "react-router-dom";
 import "./Profile.css";
 
-function Profile(){
-  const [user] = useState({
-    name: 'Daniel Cruz',
-    role: 'Estudiante · UMSS',
-    level: 'Nivel Intermedio 3',
-    xpPercent: 80,
-    xpTotal: '1.280 XP de 1.600 XP',
-    xpNext: '320 XP para el siguiente nivel'
-  });
+function Profile({ user, exercises, onLogout }) {
+  const navigate = useNavigate();
+  const completed = exercises.filter((item) => item.status === "completed").length;
+  const total = exercises.length;
 
-  const [summary] = useState({
-    exercises: 18,
+  const summary = {
+    exercises: completed,
     streak: 7,
     badges: 4,
-    accuracy: '82%'
-  });
+    accuracy: "82%"
+  };
 
-  const [recent] = useState([
-    { id:1, action: 'Filtrar números pares', date:'Hoy', state:'Completado' },
-    { id:2, action: 'Listas por comprensión', date:'Ayer', state:'85%' },
-    { id:3, action: 'Funciones de orden superior', date:'Hace 2 días', state:'70%' }
-  ]);
+  const recent = user.recent || [];
+
+  const handleLogout = () => {
+    onLogout?.();
+    navigate("/login");
+  };
 
   return (
     <div className="profile-page">
@@ -31,22 +28,21 @@ function Profile(){
           <h1>Mi perfil</h1>
           <div className="subtitle">Consulta tu nivel, logros y actividad reciente.</div>
         </div>
-        <button className="logout-btn">
+        <button className="logout-btn" onClick={handleLogout}>
           <span className="logout-icon">⏻</span> Cerrar sesión
         </button>
       </div>
 
       <div className="profile-grid">
         <div className="left-col card">
-          <div className="avatar-large">DC</div>
-
+          <div className="avatar-large">{user.name.split(" ").map((item) => item[0]).slice(0, 2).join("")}</div>
           <div className="user-name">{user.name}</div>
           <div className="user-role">{user.role}</div>
 
           <div className="level-pill">{user.level}</div>
           <div className="xp-total">{user.xpTotal}</div>
           <div className="xp-bar">
-            <div className="xp-fill" style={{width: `${user.xpPercent}%`}}></div>
+            <div className="xp-fill" style={{ width: `${user.xpPercent}%` }}></div>
           </div>
           <div className="xp-text">{user.xpNext}</div>
         </div>
@@ -77,11 +73,12 @@ function Profile(){
           <div className="activity card">
             <h3>Actividad reciente</h3>
             <div className="activity-list">
-              {recent.map(a=> (
-                <div className="activity-row" key={a.id}>
-                  <div className="act-name">{a.action}</div>
-                  <div className={`act-status ${a.state==='Completado' ? 'done' : a.state.endsWith('%') ? 'percent' : ''}`}>{a.state}</div>
-                  <div className="act-time">{a.date}</div>
+              {recent.map((item) => (
+                <div className="activity-row" key={item.id}>
+                  <div className="act-dot" data-state={item.state === "Completado" ? "done" : item.state.endsWith("%") ? "progress" : ""}></div>
+                  <div className="act-name">{item.action}</div>
+                  <div className="act-status">{item.state}</div>
+                  <div className="act-time">{item.date}</div>
                 </div>
               ))}
             </div>
@@ -89,7 +86,7 @@ function Profile(){
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 export default Profile;

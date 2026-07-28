@@ -1,0 +1,273 @@
+/* ===== Tokens de GESP (mismos que Login.css) ===== */
+:root {
+  --navy: #0f172a;
+  --green: #22c55e;
+  --green-dark: #052e16;
+  --green-mid: #166534;
+  --green-light: #dcfce7;
+  --bg: #f0fdf4;
+  --text-secondary: #647488;
+  --surface: #ffffff;
+  --radius-lg: 24px;
+  --radius-md: 14px;
+  --radius-sm: 8px;
+  --radius-pill: 999px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* ===== Página ===== */
+.register-page {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  padding: 40px 20px;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.register-shell {
+  width: 100%;
+  max-width: 960px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.14);
+  background: var(--surface);
+}
+
+/* ===== Columna izquierda (marca) ===== */
+.register-panel-left {
+  background: var(--navy);
+  color: #ffffff;
+  padding: 48px 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 28px;
+}
+
+.brand-badge {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.register-panel-left h1 {
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.3;
+  margin: 4px 0 0;
+}
+
+.progress-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.progress-step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.step-number {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  border-radius: 50%;
+  background: rgba(220, 252, 231, 0.14);
+  border: 1px solid rgba(220, 252, 231, 0.35);
+  color: var(--green-light);
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.progress-step p {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* ===== Columna derecha (formulario) ===== */
+.register-panel-right {
+  background: var(--surface);
+  padding: 48px 40px;
+  display: flex;
+  align-items: center;
+}
+
+.register-card {
+  width: 100%;
+}
+
+.register-card h2 {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--navy);
+  margin: 0 0 6px;
+}
+
+.register-card-subtitle {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0 0 24px;
+}
+
+.register-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--navy);
+}
+
+.field.full-width {
+  grid-column: 1 / -1;
+}
+
+.field input {
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--navy);
+  padding: 11px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid #d9e2df;
+  background: #fbfdfc;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  width: 100%;
+}
+
+.field input::placeholder {
+  color: #9aa5a2;
+}
+
+.field input:focus {
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15);
+}
+
+.field-invalid input {
+  border-color: #ef4444;
+}
+
+.field-error {
+  color: #ef4444;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.checkbox-block {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.checkbox-line {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--navy);
+  cursor: pointer;
+}
+
+.checkbox-line input {
+  accent-color: var(--green);
+  width: 16px;
+  height: 16px;
+  margin-top: 1px;
+}
+
+/* ===== Botones ===== */
+.btn {
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 12px 20px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.05s ease;
+}
+
+.btn-block {
+  width: 100%;
+}
+
+.btn-primary {
+  background: var(--green);
+  color: #ffffff;
+}
+
+.btn-primary:hover {
+  background: var(--green-mid);
+}
+
+.btn-primary:active {
+  transform: scale(0.99);
+}
+
+.register-divider {
+  height: 1px;
+  background: #e6ece9;
+  margin: 24px 0 16px;
+}
+
+.register-footer {
+  font-size: 13px;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.footer-link {
+  color: var(--green-mid);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.footer-link:hover {
+  text-decoration: underline;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 760px) {
+  .register-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .register-panel-left,
+  .register-panel-right {
+    padding: 32px 24px;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}
