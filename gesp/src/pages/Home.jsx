@@ -273,6 +273,9 @@ function Home({ isAuthenticated, onSaveCorrect, onAttempt, exercise, onBack }) {
     setSelectedLine(lineNumber);
     setLineFragments(explainLine(text));
     setIsExplaining(false);
+    if (text.trim().length > 0) {
+      setCanSave(true);
+    }
   }
 
   function handleExplainFunction() {
@@ -305,6 +308,9 @@ function Home({ isAuthenticated, onSaveCorrect, onAttempt, exercise, onBack }) {
     intervalRef.current = setInterval(() => {
       count += 1;
       setVisibleCount(count);
+      if (count === 1) {
+        setCanSave(true);
+      }
       if (count >= stepsToShow.length) {
         clearInterval(intervalRef.current);
         setIsExplaining(false);

@@ -162,7 +162,7 @@
   color: #991B1B;
 }
 
-.action-row { margin-top: 16px; display: flex; justify-content: flex-end; }
+.action-row { margin-top: 14px; display: flex; justify-content: flex-end; }
 
 .btn {
   border: none;
@@ -174,7 +174,13 @@
 }
 .btn-primary { background: var(--green); color: white; }
 .btn-primary:disabled { background: #D1D5DB; color: #9CA3AF; cursor: not-allowed; }
-.btn-save { background: var(--navy); color: white; }
+.btn-save {
+  background: var(--navy);
+  color: white;
+  padding: 8px 16px;
+  font-size: 12px;
+  min-width: 130px;
+}
 .btn-save:disabled { background: #D1D5DB; color: #9CA3AF; cursor: not-allowed; }
 .btn-secondary { background: white; border: 1px solid #D1D5DB; color: var(--navy); }
 .btn-block { width: 100%; }
