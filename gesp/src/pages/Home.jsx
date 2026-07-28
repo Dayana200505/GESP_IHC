@@ -1,7 +1,7 @@
-import React, { useState, useRef, useEffect } from "react";
+﻿import React, { useState, useRef, useEffect } from "react";
 import "./Home.css";
 
-function Home() {
+function Home({ isAuthenticated, onSaveCorrect }) {
   const initial = `filter even [1..10]`;
   const [code, setCode] = useState(initial);
   const [steps, setSteps] = useState([]);
@@ -10,43 +10,51 @@ function Home() {
   const [hasError, setHasError] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [canSave, setCanSave] = useState(false);
-
-  const [showSavedModal, setShowSavedModal] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const [showSaveErrorModal, setShowSaveErrorModal] = useState(false);
   const [showDraftModal, setShowDraftModal] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const intervalRef = useRef();
 
-  useEffect(()=> {
-    return ()=> clearInterval(intervalRef.current);
-  },[])
+  useEffect(() => {
+    return () => clearInterval(intervalRef.current);
+  }, []);
 
-  function checkSyntax(text){
+  function checkSyntax(text) {
     const stack = [];
-    const pairs = {')':'(',']':'[','}':'{'};
-    for(let ch of text){
-      if(['(','[','{'].includes(ch)) stack.push(ch);
-      if([')',']','}'].includes(ch)){
-        if(stack.length===0 || stack.pop() !== pairs[ch]) return {ok:false, msg: 'Paréntesis o corchetes sin cerrar correctamente.'}
+    const pairs = { ")": "(", "]": "[", "}": "{" };
+    for (let ch of text) {
+      if (["(", "[", "{"].includes(ch)) stack.push(ch);
+      if ([")", "]", "}"].includes(ch)) {
+        if (stack.length === 0 || stack.pop() !== pairs[ch]) {
+          return { ok: false, msg: "Paréntesis o corchetes sin cerrar correctamente." };
+        }
       }
     }
-    return stack.length===0 ? {ok:true} : {ok:false, msg:'Faltan cierres de paréntesis o corchetes.'}
+    return stack.length === 0
+      ? { ok: true }
+      : { ok: false, msg: "Faltan cierres de paréntesis o corchetes." };
   }
 
-  function generateSteps(text){
-    if(text.includes('filter')){
+  function generateSteps(text) {
+    if (text.includes("filter")) {
       return [
-        'Identifica la llamada a `filter` y el predicado usado.',
-        'Aplica el predicado a cada elemento de la lista.',
-        'Construye una nueva lista con los elementos que cumplen la condición.'
+        "Identifica la llamada a filter y el predicado usado.",
+        "Aplica el predicado a cada elemento de la lista.",
+        "Construye una nueva lista con los elementos que cumplen la condición."
       ];
     }
-    const lines = text.split('\n').map(l=>l.trim()).filter(Boolean);
-    if(lines.length===0) return ['El editor está vacío. Escribe código para obtener una explicación.'];
-    return lines.map((l,i)=> `Paso ${i+1}: analiza la expresión \"${l}\" y describe su función.`)
+
+    const lines = text.split("\n").map((line) => line.trim()).filter(Boolean);
+    if (lines.length === 0) {
+      return ["El editor está vacío. Escribe código para obtener una explicación."];
+    }
+
+    return lines.map((line, index) => `Paso ${index + 1}: analiza la expresión "${line}" y describe su función.`);
   }
 
-  function handleExplain(){
+  function handleExplain() {
     clearInterval(intervalRef.current);
     setIsExplaining(true);
     setHasError(false);
@@ -55,79 +63,105 @@ function Home() {
     setVisible(0);
     setCanSave(false);
 
-    const chk = checkSyntax(code);
-    if(!chk.ok){
+    const syntax = checkSyntax(code);
+    if (!syntax.ok) {
       setHasError(true);
-      setErrorMsg(chk.msg);
+      setErrorMsg(syntax.msg);
+      setSteps([`Error de sintaxis: ${syntax.msg}`]);
+      setCanSave(true);
       setIsExplaining(false);
-      setSteps([`Error de sintaxis: ${chk.msg}`]);
       return;
     }
 
-    const s = generateSteps(code);
-    setSteps(s);
+    const generated = generateSteps(code);
+    setSteps(generated);
 
-    let i = 0;
-    intervalRef.current = setInterval(()=>{
-      i += 1;
-      setVisible(i);
-      if(i>=s.length){
+    let count = 0;
+    intervalRef.current = setInterval(() => {
+      count += 1;
+      setVisible(count);
+      if (count >= generated.length) {
         clearInterval(intervalRef.current);
         setIsExplaining(false);
         setCanSave(true);
       }
-    }, 650);
+    }, 450);
   }
 
-  function handleSave(){
-    if(hasError){
+  function handleSave() {
+    if (hasError) {
       setShowSaveErrorModal(true);
       return;
     }
-    // show saved modal
-    setShowSavedModal(true);
+
+    if (!isAuthenticated) {
+      setShowAuthModal(true);
+      return;
+    }
+
+    setShowSuccessModal(true);
+    onSaveCorrect?.();
   }
 
-  function handleSaveDraft(){
+  function handleSaveDraft() {
     setShowSaveErrorModal(false);
     setShowDraftModal(true);
   }
+
+  const lineCount = code.split("\n").length;
 
   return (
     <div className="home-container">
       <div className="card editor-card">
         <h2>Editor de código</h2>
-
-        <textarea className="code-area" value={code} onChange={(e)=>setCode(e.target.value)} />
+        <div className="code-editor">
+          <div className="line-numbers">
+            {Array.from({ length: lineCount }, (_, index) => (
+              <div key={index}>{index + 1}</div>
+            ))}
+          </div>
+          <textarea
+            className="code-area"
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+          />
+        </div>
 
         <div className="editor-actions">
-          <button className="primary-btn btn" onClick={handleExplain} disabled={isExplaining}>{isExplaining ? 'Explicando...' : 'Explicar función'}</button>
+          <button className="primary-btn btn" onClick={handleExplain} disabled={isExplaining}>
+            {isExplaining ? "Analizando código..." : "Explicar función"}
+          </button>
         </div>
       </div>
 
       <div className="card explanation-card">
         <h2>Explicación guiada</h2>
         <div className="explanation-body">
-          {steps.slice(0, visible).map((st, idx)=> (
-            <div className="ex-step" key={idx}>{st}</div>
+          {steps.slice(0, visible).map((step, index) => (
+            <div key={index} className={`ex-step ${hasError ? "error" : ""}`}>
+              {step}
+            </div>
           ))}
 
-          {hasError && (
-            <div className="error-box">{errorMsg} — Revisa la sintaxis.</div>
-          )}
+          {!steps.length && <div className="help-text">Genera una explicación para ver los pasos de la función.</div>}
         </div>
 
-        <div style={{marginTop:12}}>
-          {canSave && <button className="btn btn-primary" onClick={handleSave}>Guardar progreso</button>}
+        <div className="action-row">
+          <button className="btn btn-save" disabled={!canSave} onClick={handleSave}>
+            Guardar progreso
+          </button>
         </div>
       </div>
 
-      {showSavedModal && (
+      {showAuthModal && (
         <div className="modal-backdrop">
           <div className="modal">
-            <h3>¡Progreso guardado correctamente!</h3>
-            <div style={{marginTop:12,textAlign:'right'}}>
-              <button className="btn" onClick={()=>setShowSavedModal(false)}>Cerrar</button>
+            <h3>Guarda tu progreso</h3>
+            <p>Debes crear una cuenta o iniciar sesión para guardar tu avance.</p>
+            <div className="modal-actions">
+              <button className="btn btn-primary" onClick={() => setShowAuthModal(false)}>
+                Entendido
+              </button>
             </div>
           </div>
         </div>
@@ -136,11 +170,15 @@ function Home() {
       {showSaveErrorModal && (
         <div className="modal-backdrop">
           <div className="modal">
-            <h3>Hay errores en el código</h3>
-            <p>{errorMsg}</p>
-            <div style={{display:'flex',gap:8,justifyContent:'flex-end',marginTop:12}}>
-              <button className="btn" onClick={()=>setShowSaveErrorModal(false)}>Seguir editando</button>
-              <button className="btn btn-primary" onClick={handleSaveDraft}>Guardar como borrador</button>
+            <h3>¡Se detectaron errores en tu código!</h3>
+            <p>El ejercicio no se marcará como completado, pero puedes guardar un borrador.</p>
+            <div className="modal-actions split">
+              <button className="btn btn-primary" onClick={() => setShowSaveErrorModal(false)}>
+                Seguir editando
+              </button>
+              <button className="btn btn-secondary" onClick={handleSaveDraft}>
+                Guardar como borrador
+              </button>
             </div>
           </div>
         </div>
@@ -149,15 +187,30 @@ function Home() {
       {showDraftModal && (
         <div className="modal-backdrop">
           <div className="modal">
-            <h3>Borrador guardado</h3>
-            <p>El borrador se guardó correctamente.</p>
-            <div style={{marginTop:12,textAlign:'right'}}>
-              <button className="btn" onClick={()=>setShowDraftModal(false)}>Cerrar</button>
+            <h3>¡Progreso guardado!</h3>
+            <p>Tu ejercicio se guardó como borrador para continuar después.</p>
+            <div className="modal-actions">
+              <button className="btn btn-primary" onClick={() => setShowDraftModal(false)}>
+                Aceptar
+              </button>
             </div>
           </div>
         </div>
       )}
 
+      {showSuccessModal && (
+        <div className="modal-backdrop">
+          <div className="modal">
+            <h3>¡Progreso guardado!</h3>
+            <p>Tu progreso se guardó correctamente.</p>
+            <div className="modal-actions">
+              <button className="btn btn-primary" onClick={() => setShowSuccessModal(false)}>
+                Aceptar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

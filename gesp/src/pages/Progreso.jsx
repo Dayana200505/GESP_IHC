@@ -1,62 +1,43 @@
-import React, { useState, useMemo } from "react";
+﻿import React, { useMemo } from "react";
 import "./Progreso.css";
 
-function Progreso(){
-  const exercisesInit = [
-    { id:1, title: 'Primeros pasos con listas', desc: 'Usa head, tail y length para analizar una lista.', difficulty: 'Difícil', status: 'completed', progress: 100 },
-    { id:2, title: 'Filtrar números pares', desc: 'Aplica filter y una función predicado.', difficulty: 'Fácil', status: 'in-progress', progress: 45 },
-    { id:3, title: 'Recursividad básica', desc: 'Construye una función recursiva paso a paso.', difficulty: 'Intermedio', status: 'completed', progress: 100 },
-    { id:4, title: 'Map y fold', desc: 'Transforma y reduce listas.', difficulty: 'Intermedio', status: 'not-started', progress: 0 },
-    { id:5, title: 'Tipos y firmas', desc: 'Comprende las firmas de funciones.', difficulty: 'Fácil', status: 'not-started', progress: 0 }
-  ];
-
-  const [exercises, setExercises] = useState(exercisesInit);
-  const [filter, setFilter] = useState('Todos');
+function Progreso({ exercises, setExercises }) {
+  const [filter, setFilter] = React.useState("Todos");
+  const [topicFilter, setTopicFilter] = React.useState("");
 
   const total = exercises.length;
-  const completedCount = exercises.filter(e=>e.status==='completed').length;
-  const pendingCount = total - completedCount;
-  const overall = Math.round((exercises.reduce((s,e)=>s+e.progress,0) / (total||1)));
+  const completedCount = exercises.filter((item) => item.status === "completed").length;
+  const overall = Math.round(
+    exercises.reduce((sum, item) => sum + item.progress, 0) / (total || 1)
+  );
 
-  function toggleStatus(id){
-    setExercises((arr)=> arr.map(e=> {
-      if(e.id!==id) return e;
-      if(e.status==='completed') return {...e, status:'not-started', progress:0};
-      if(e.status==='in-progress') return {...e, status:'completed', progress:100};
-      return {...e, status:'in-progress', progress:50};
-    }))
-  }
+  const themes = ["Listas", "Recursividad", "Funciones", "Tipos"];
 
-  const filteredExercises = useMemo(()=>{
-    if(filter==='Todos') return exercises;
-    return exercises.filter(e=> e.difficulty === filter);
-  },[exercises, filter]);
+  const filteredExercises = useMemo(() => {
+    return exercises.filter((item) => {
+      if (filter !== "Todos" && item.difficulty !== filter) return false;
+      if (topicFilter && item.topic !== topicFilter) return false;
+      return true;
+    });
+  }, [exercises, filter, topicFilter]);
+
+  const handleToggleStatus = (id) => {
+    setExercises((current) =>
+      current.map((item) => {
+        if (item.id !== id) return item;
+        if (item.status === "completed") return { ...item, status: "not-started", progress: 0 };
+        if (item.status === "in-progress") return { ...item, status: "completed", progress: 100 };
+        return { ...item, status: "in-progress", progress: 45 };
+      })
+    );
+  };
 
   return (
     <div className="progreso-page">
       <div className="page-header">
-        
-                <div>
+        <div>
           <h1>Mi progreso</h1>
           <div className="subtitle">Ejercicios ordenados de fácil a difícil para dominar Haskell.</div>
-        </div></div>
-
-      <div className="summary-cards">
-        <div className="card-stat">
-          <div className="stat-title">Porcentaje completado</div>
-          <div className="stat-value">{overall}%</div>
-        </div>
-        <div className="card-stat">
-          <div className="stat-title">Ejercicios completados</div>
-          <div className="stat-value">{completedCount}</div>
-        </div>
-        <div className="card-stat">
-          <div className="stat-title">Ejercicios pendientes</div>
-          <div className="stat-value">{pendingCount}</div>
-        </div>
-        <div className="card-stat">
-          <div className="stat-title">Racha</div>
-          <div className="stat-value">7 días</div>
         </div>
       </div>
 
@@ -65,44 +46,83 @@ function Progreso(){
           <div className="overall-title">Progreso general</div>
           <div className="overall-sub">{completedCount} de {total} ejercicios completados</div>
           <div className="bar">
-            <div className="bar-fill" style={{width: `${overall}%`}}></div>
+            <div className="bar-fill" style={{ width: `${overall}%` }}></div>
           </div>
         </div>
         <div className="overall-right">{overall}%</div>
       </div>
 
-      <div className="filters-row">
-        <div className={`filter-chip ${filter==='Todos' ? 'active' : ''}`} onClick={()=>setFilter('Todos')}>Todos</div>
-        <div className={`filter-chip ${filter==='Fácil' ? 'active' : ''}`} onClick={()=>setFilter('Fácil')}>Fácil</div>
-        <div className={`filter-chip ${filter==='Intermedio' ? 'active' : ''}`} onClick={()=>setFilter('Intermedio')}>Intermedio</div>
-        <div className={`filter-chip ${filter==='Difícil' ? 'active' : ''}`} onClick={()=>setFilter('Difícil')}>Difícil</div>
-      </div>
-
-      <div className="exercise-list">
-        {filteredExercises.map((ex)=> (
-          <div className="exercise-card" key={ex.id}>
-            <div className="exercise-main">
-              <div className="ex-index">{ex.id}.</div>
-              <div className="ex-body">
-                <div className="ex-title">{ex.title}</div>
-                <div className="ex-desc">{ex.desc}</div>
-              </div>
-            </div>
-
-            <div className="exercise-meta">
-              <div className={`difficulty ${ex.difficulty.toLowerCase()}`}>{ex.difficulty}</div>
-              <div className="small-bar">
-                <div className="small-fill" style={{width:`${ex.progress}%`}}></div>
-              </div>
-              <button className={`status ${ex.status==='completed' ? 'done' : ex.status==='in-progress' ? 'progress' : ''}`} onClick={()=> toggleStatus(ex.id)}>
-                {ex.status==='completed' ? 'Completado' : ex.status==='in-progress' ? 'En progreso' : 'Siguiente'}
-              </button>
+      <div className="progreso-grid">
+        <aside className="progress-sidebar">
+          <div className="sidebar-card">
+            <h3>Niveles</h3>
+            <div className="sidebar-filter">
+              {[
+                { label: `Todos (${total})`, value: "Todos" },
+                { label: `Fácil (${exercises.filter((item) => item.difficulty === "Fácil").length})`, value: "Fácil" },
+                { label: `Intermedio (${exercises.filter((item) => item.difficulty === "Intermedio").length})`, value: "Intermedio" },
+                { label: `Difícil (${exercises.filter((item) => item.difficulty === "Difícil").length})`, value: "Difícil" }
+              ].map((option) => (
+                <button
+                  key={option.value}
+                  className={`level-chip ${filter === option.value ? "active" : ""}`}
+                  onClick={() => setFilter(option.value)}
+                >
+                  {option.label}
+                </button>
+              ))}
             </div>
           </div>
-        ))}
+
+          <div className="sidebar-card">
+            <h3>Tema</h3>
+            <div className="topic-tags">
+              {themes.map((topic) => (
+                <button
+                  key={topic}
+                  className={`topic-chip ${topicFilter === topic ? "active" : ""}`}
+                  onClick={() => setTopicFilter(topicFilter === topic ? "" : topic)}
+                >
+                  {topic}
+                </button>
+              ))}
+            </div>
+          </div>
+        </aside>
+
+        <section className="progress-exercises">
+          {filteredExercises.map((exercise) => (
+            <div className="exercise-card" key={exercise.id}>
+              <div className="exercise-main">
+                <div className="ex-index">{exercise.id}.</div>
+                <div className="ex-body">
+                  <div className="ex-title">{exercise.title}</div>
+                  <div className="ex-desc">{exercise.desc}</div>
+                </div>
+              </div>
+              <div className="exercise-meta">
+                <div className={`difficulty ${exercise.difficulty.toLowerCase()}`}>{exercise.difficulty}</div>
+                <div className="topic-tag">{exercise.topic}</div>
+                <div className="small-bar">
+                  <div className="small-fill" style={{ width: `${exercise.progress}%` }}></div>
+                </div>
+                <button
+                  className={`status ${exercise.status === "completed" ? "done" : exercise.status === "in-progress" ? "progress" : ""}`}
+                  onClick={() => handleToggleStatus(exercise.id)}
+                >
+                  {exercise.status === "completed"
+                    ? "Completado"
+                    : exercise.status === "in-progress"
+                    ? "En progreso"
+                    : "Siguiente"}
+                </button>
+              </div>
+            </div>
+          ))}
+        </section>
       </div>
     </div>
-  )
+  );
 }
 
 export default Progreso;

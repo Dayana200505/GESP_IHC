@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+﻿import React, { useState, useMemo, useRef } from "react";
 import "./Recursos.css";
 
 function Recursos() {
@@ -49,49 +49,45 @@ function Recursos() {
   const [filterType, setFilterType] = useState("ALL");
   const [showConfirm, setShowConfirm] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-
-  const fileInputRef = useRef(null);
-  const [observations, setObservations] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("");
-  const [levelFilter, setLevelFilter] = useState("");
+  const [showDraftSaved, setShowDraftSaved] = useState(false);
+  const [selectedViewer, setSelectedViewer] = useState(null);
   const [sortOption, setSortOption] = useState("newest");
+  const fileInputRef = useRef(null);
+
+  const themeOptions = ["Recursividad", "Funciones", "Teoría", "General"];
 
   function handleDrop(e) {
     e.preventDefault();
-    const f = e.dataTransfer.files && e.dataTransfer.files[0];
-    if (f) {
-      setFile(f);
-    }
+    const dropped = e.dataTransfer.files && e.dataTransfer.files[0];
+    if (dropped) setFile(dropped);
   }
 
   function handleFileChange(e) {
-    const f = e.target.files && e.target.files[0];
-    if (f) setFile(f);
+    const selected = e.target.files && e.target.files[0];
+    if (selected) setFile(selected);
   }
 
   function handlePublish() {
     if (mode === "PDF" && !file) return alert("Selecciona un archivo PDF");
-    if (mode === "LINK" && !link) return alert("Introduce una URL");
+    if (mode === "LINK" && !link.trim()) return alert("Introduce una URL");
     setShowConfirm(true);
   }
 
-  function confirmPublish(){
+  function confirmPublish() {
     const id = Date.now();
-    const newRes = {
+    const newResource = {
       id,
       type: mode === "PDF" ? "PDF" : "LINK",
-      title: title || (file ? file.name : "Nuevo recurso"),
-      desc: mode === "PDF" ? "Archivo subido por la comunidad." : "Enlace compartido.",
+      title: title || (file ? file.name : "Recurso sin título"),
+      desc: mode === "PDF" ? "Archivo compartido por la comunidad." : "Enlace compartido por la comunidad.",
       author: "Tú",
       category: category || "General",
       level: level || "Principiante",
-      date: new Date().toISOString().slice(0,10),
-      observations: observations,
+      date: new Date().toISOString().slice(0, 10),
       url: mode === "PDF" ? URL.createObjectURL(file) : link
     };
 
-    setResources((s) => [newRes, ...s]);
-    // limpiar
+    setResources((current) => [newResource, ...current]);
     setFile(null);
     setLink("");
     setTitle("");
@@ -101,163 +97,160 @@ function Recursos() {
     setShowSuccess(true);
   }
 
-  const filtered = resources.filter((r) => {
-    if (filterType !== "ALL" && r.type !== filterType) return false;
-    if (categoryFilter && r.category !== categoryFilter) return false;
-    if (levelFilter && r.level !== levelFilter) return false;
-    if (search && !(`${r.title} ${r.desc} ${r.author} ${r.category}`.toLowerCase().includes(search.toLowerCase()))) return false;
-    return true;
-  });
+  function handleSaveDraft() {
+    setShowDraftSaved(true);
+  }
 
-  // sorting
-  const sorted = [...filtered].sort((a,b)=>{
-    if(sortOption === 'newest') return new Date(b.date) - new Date(a.date);
-    if(sortOption === 'oldest') return new Date(a.date) - new Date(b.date);
-    if(sortOption === 'title-asc') return a.title.localeCompare(b.title);
-    if(sortOption === 'title-desc') return b.title.localeCompare(a.title);
-    return 0;
-  });
+  function handleViewPDF(resource) {
+    setSelectedViewer(resource);
+  }
+
+  const filtered = useMemo(() => {
+    return resources.filter((item) => {
+      if (filterType === "PDF" && item.type !== "PDF") return false;
+      if (filterType === "LINK" && item.type !== "LINK") return false;
+      if (search && !(`${item.title} ${item.desc} ${item.author}`.toLowerCase().includes(search.toLowerCase()))) return false;
+      if (level && item.level !== level) return false;
+      return true;
+    });
+  }, [resources, filterType, search, level]);
+
+  const sorted = useMemo(() => {
+    return [...filtered].sort((a, b) => {
+      if (sortOption === "newest") return new Date(b.date) - new Date(a.date);
+      if (sortOption === "oldest") return new Date(a.date) - new Date(b.date);
+      if (sortOption === "title-asc") return a.title.localeCompare(b.title);
+      if (sortOption === "title-desc") return b.title.localeCompare(a.title);
+      return 0;
+    });
+  }, [filtered, sortOption]);
 
   return (
     <div className="recursos-page">
-      <div className="page-header">        <div>
+      <div className="page-header">
+        <div>
           <h1>Material de apoyo</h1>
           <div className="subtitle">Comparte documentos y enlaces útiles para aprender Programación Funcional con Haskell.</div>
-        </div></div>
+        </div>
+        <span className="count-pill">{resources.length} recursos compartidos</span>
+      </div>
+
       <div className="recursos-grid">
         <div className="recursos-left">
-        <h3>Compartir recurso</h3>
+          <h3>Subir nuevo material</h3>
 
-        <div className="mode-tabs">
-          <button className={mode === "PDF" ? "tab active" : "tab"} onClick={() => setMode("PDF")}>Documento PDF</button>
-          <button className={mode === "LINK" ? "tab active" : "tab"} onClick={() => setMode("LINK")}>Enlace externo</button>
-        </div>
+          <div className="mode-tabs">
+            <button className={mode === "PDF" ? "tab active" : "tab"} onClick={() => setMode("PDF")}>Documento PDF</button>
+            <button className={mode === "LINK" ? "tab active" : "tab"} onClick={() => setMode("LINK")}>Enlace externo</button>
+          </div>
 
-        {mode === "PDF" ? (
-          <>
-            <div className="dropzone" onDrop={handleDrop} onDragOver={(e) => e.preventDefault()} onClick={() => fileInputRef.current.click()}>
-              <div className="drop-inner">
-                <div className="pdf-icon">PDF</div>
-                <div className="drop-text">{file ? file.name : "Arrastra tu archivo aquí o selecciónalo desde tu equipo"}</div>
-                <div className="drop-hint">Máximo 10 MB</div>
+          {mode === "PDF" ? (
+            <>
+              <div className="dropzone" onDrop={handleDrop} onDragOver={(e) => e.preventDefault()} onClick={() => fileInputRef.current.click()}>
+                <div className="drop-inner">
+                  <div className="pdf-icon">PDF</div>
+                  <div>
+                    <div className="drop-text">Arrastra tu archivo aquí o selecciónalo desde tu equipo</div>
+                    <div className="drop-hint">Máximo 10 MB</div>
+                  </div>
+                </div>
               </div>
+              <input ref={fileInputRef} type="file" accept="application/pdf" style={{ display: "none" }} onChange={handleFileChange} />
+            </>
+          ) : (
+            <div className="link-input">
+              <input placeholder="https://" value={link} onChange={(e) => setLink(e.target.value)} />
             </div>
-            <input ref={fileInputRef} type="file" accept="application/pdf" style={{display:'none'}} onChange={handleFileChange} />
-          </>
-        ) : (
-          <div className="link-input">
-            <input placeholder="https://" value={link} onChange={(e)=>setLink(e.target.value)} />
+          )}
+
+          <label>Título del recurso</label>
+          <input className="text" placeholder="Ej.: Guía de recursividad en Haskell" value={title} onChange={(e) => setTitle(e.target.value)} />
+
+          <div className="row">
+            <div className="col">
+              <label>Categoría</label>
+              <select value={category} onChange={(e) => setCategory(e.target.value)}>
+                <option value="">Selecciona</option>
+                {themeOptions.map((option) => (
+                  <option key={option} value={option}>{option}</option>
+                ))}
+              </select>
+            </div>
+            <div className="col">
+              <label>Nivel recomendado</label>
+              <select value={level} onChange={(e) => setLevel(e.target.value)}>
+                <option value="">Selecciona</option>
+                <option>Principiante</option>
+                <option>Intermedio</option>
+                <option>Avanzado</option>
+              </select>
+            </div>
           </div>
-        )}
 
-        <label>Título del recurso</label>
-        <input className="text" placeholder="Ej.: Guía de recursividad en Haskell" value={title} onChange={(e)=>setTitle(e.target.value)} />
-
-        <div className="row">
-          <div className="col">
-            <label>Categoría</label>
-            <select value={category} onChange={(e)=>setCategory(e.target.value)}>
-              <option value="">Selecciona</option>
-              <option>Recursividad</option>
-              <option>Funciones</option>
-              <option>Teoría</option>
-            </select>
+          <div className="action-row">
+            <button type="button" className="publish-btn" onClick={handlePublish}>Publicar material</button>
+            <button type="button" className="btn btn-secondary" onClick={handleSaveDraft}>Guardar borrador</button>
           </div>
-          <div className="col">
-            <label>Nivel recomendado</label>
-            <select value={level} onChange={(e)=>setLevel(e.target.value)}>
-              <option value="">Selecciona</option>
-              <option>Principiante</option>
-              <option>Intermedio</option>
-              <option>Avanzado</option>
-            </select>
-          </div>
-        </div>
 
-        <label>Observaciones</label>
-        <textarea className="text" placeholder="Notas o descripción adicional" value={observations} onChange={(e)=>setObservations(e.target.value)} />
-
-        <div style={{marginTop:12}}>
-          <button className="publish-btn" style={{width:'100%'}} onClick={handlePublish}>Publicar material</button>
-        </div>
-
+          <p className="small-note">Al publicar, el recurso será visible para la comunidad.</p>
         </div>
 
         <div className="recursos-right">
-        <div className="resources-header">
-          <h3>Recursos de la comunidad</h3>
-          <div className="badge">{resources.length} recursos compartidos</div>
-        </div>
+          <div className="resources-header">
+            <h3>Recursos de la comunidad</h3>
+            <div className="search-group">
+              <input placeholder="Buscar recurso..." value={search} onChange={(e) => setSearch(e.target.value)} />
+            </div>
+          </div>
 
-        <div className="controls">
-          <div className="controls-left">
+          <div className="controls">
             <div className="filters">
-              <button className={filterType==='ALL'? 'chip active':'chip'} onClick={()=>setFilterType('ALL')}>Todos</button>
-              <button className={filterType==='PDF'? 'chip active':'chip'} onClick={()=>setFilterType('PDF')}>PDF</button>
-              <button className={filterType==='LINK'? 'chip active':'chip'} onClick={()=>setFilterType('LINK')}>Enlaces</button>
+              <button className={filterType === "ALL" ? "chip active" : "chip"} onClick={() => setFilterType("ALL")}>Todos</button>
+              <button className={filterType === "PDF" ? "chip active" : "chip"} onClick={() => setFilterType("PDF")}>PDF</button>
+              <button className={filterType === "LINK" ? "chip active" : "chip"} onClick={() => setFilterType("LINK")}>Enlaces</button>
             </div>
-
-            <select value={categoryFilter} onChange={(e)=>setCategoryFilter(e.target.value)}>
-              <option value="">Todas las categorías</option>
-              <option>Recursividad</option>
-              <option>Funciones</option>
-              <option>Teoría</option>
-              <option>General</option>
-            </select>
-
-            <select value={levelFilter} onChange={(e)=>setLevelFilter(e.target.value)}>
-              <option value="">Todos los niveles</option>
-              <option>Principiante</option>
-              <option>Intermedio</option>
-              <option>Avanzado</option>
-            </select>
+            <div className="sort-select">
+              <select value={sortOption} onChange={(e) => setSortOption(e.target.value)}>
+                <option value="newest">Más recientes</option>
+                <option value="oldest">Más antiguos</option>
+                <option value="title-asc">Título A→Z</option>
+                <option value="title-desc">Título Z→A</option>
+              </select>
+            </div>
           </div>
 
-          <div className="controls-right">
-            <div className="search">
-              <input placeholder="Buscar recurso..." value={search} onChange={(e)=>setSearch(e.target.value)} />
-            </div>
-            <select value={sortOption} onChange={(e)=>setSortOption(e.target.value)}>
-              <option value="newest">Más recientes</option>
-              <option value="oldest">Más antiguos</option>
-              <option value="title-asc">Título A→Z</option>
-              <option value="title-desc">Título Z→A</option>
-            </select>
-          </div>
-        </div>
-
-        <div className="resource-list">
-          {sorted.map((r)=> (
-            <div className="resource-card" key={r.id}>
-              <div className="left">
-                <div className={r.type==='PDF' ? 'pill pdf' : 'pill link'}>{r.type}</div>
-                <div className="meta">
-                  <div className="title">{r.title}</div>
-                  <div className="desc">{r.desc}</div>
-                  <div className="by">{r.category} · {r.level} · Por {r.author} · {r.date}</div>
+          <div className="resource-list">
+            {sorted.map((item) => (
+              <div className="resource-card" key={item.id}>
+                <div className="left">
+                  <div className={item.type === "PDF" ? "pill pdf" : "pill link"}>{item.type}</div>
+                  <div className="meta">
+                    <div className="title">{item.title}</div>
+                    <div className="desc">{item.desc}</div>
+                    <div className="by">{item.category} · {item.level} · Por {item.author} · {item.date}</div>
+                  </div>
+                </div>
+                <div className="actions">
+                  {item.type === "PDF" ? (
+                    <button className="outline" onClick={() => handleViewPDF(item)}>Ver PDF</button>
+                  ) : (
+                    <button className="outline" onClick={() => window.open(item.url, "_blank")}>Abrir link</button>
+                  )}
                 </div>
               </div>
-              <div className="actions">
-                {r.type==='PDF' ? (
-                  <button className="outline" onClick={()=> window.open(r.url, '_blank')}>Ver PDF</button>
-                ) : (
-                  <button className="outline" onClick={()=> window.open(r.url, '_blank')}>Abrir link</button>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-
+            ))}
+          </div>
         </div>
       </div>
+
       {showConfirm && (
         <div className="modal-backdrop">
           <div className="modal">
-            <h3>Confirmar publicación</h3>
-            <p>¿Deseas publicar este material en la comunidad?</p>
-            <div style={{display:'flex',justifyContent:'flex-end',gap:8,marginTop:12}}>
-              <button className="btn" onClick={()=>setShowConfirm(false)}>Cancelar</button>
-              <button className="btn btn-primary" onClick={confirmPublish}>Confirmar</button>
+            <h3>¿Está seguro de publicar el material?</h3>
+            <p>Al aceptar, el recurso se compartirá con la comunidad.</p>
+            <div className="modal-actions split">
+              <button className="btn btn-secondary" onClick={() => setShowConfirm(false)}>Cancelar</button>
+              <button className="btn btn-primary" onClick={confirmPublish}>Aceptar</button>
             </div>
           </div>
         </div>
@@ -266,9 +259,44 @@ function Recursos() {
       {showSuccess && (
         <div className="modal-backdrop">
           <div className="modal">
-            <h3>Material subido correctamente.</h3>
-            <div style={{display:'flex',justifyContent:'flex-end',marginTop:12}}>
-              <button className="btn" onClick={()=>setShowSuccess(false)}>Cerrar</button>
+            <h3>Material subido correctamente</h3>
+            <p>Tu recurso está disponible para la comunidad.</p>
+            <div className="modal-actions">
+              <button className="btn btn-primary" onClick={() => setShowSuccess(false)}>Aceptar</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showDraftSaved && (
+        <div className="modal-backdrop">
+          <div className="modal">
+            <h3>Borrador guardado</h3>
+            <p>Tu recurso quedó guardado para editarlo más tarde.</p>
+            <div className="modal-actions">
+              <button className="btn btn-primary" onClick={() => setShowDraftSaved(false)}>Aceptar</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {selectedViewer && (
+        <div className="modal-backdrop">
+          <div className="modal viewer-modal">
+            <div className="viewer-header">
+              <h3>{selectedViewer.title}</h3>
+              <button className="close-viewer" onClick={() => setSelectedViewer(null)}>X</button>
+            </div>
+            <div className="viewer-toolbar">
+              <span>Archivo PDF</span>
+              <span>Pagina 1 / 5</span>
+            </div>
+            <div className="viewer-content">
+              <p>Simulación de visor de documento para el recurso seleccionado.</p>
+              <p>Contenido ficticio mostrando un resumen del PDF y algunos bloques de texto.</p>
+            </div>
+            <div className="modal-actions">
+              <button className="btn btn-primary" onClick={() => setSelectedViewer(null)}>Cerrar</button>
             </div>
           </div>
         </div>
