@@ -4,20 +4,65 @@ import "./Recursos.css";
 const THEME_OPTIONS = ["Recursividad", "Funciones", "Teoría", "General"];
 const LEVEL_OPTIONS = ["Principiante", "Intermedio", "Avanzado"];
 
-const initialResources = [
-  {
-    id: 1,
-    type: "PDF",
-    title: "Funciones de orden superior",
-    desc: "Resumen con ejemplos de map, filter y foldr.",
-    author: "María L.",
+const embeddedPDFMetadata = {
+  "fold.pdf": {
+    title: "Fold en Haskell",
+    desc: "Guía práctica sobre fold y su uso en programación funcional.",
     category: "Funciones",
     level: "Intermedio",
+    author: "Material oficial",
     date: "2026-07-20",
-    url: null, // recurso de ejemplo, sin archivo real
   },
+  "funcionesSobreListas_I_20.pdf": {
+    title: "Funciones sobre listas I",
+    desc: "Apuntes sobre funciones de listas como map, filter y fold.",
+    category: "Funciones",
+    level: "Intermedio",
+    author: "Material oficial",
+    date: "2026-07-18",
+  },
+  "ListasPorComprensión.pdf": {
+    title: "Listas por comprensión",
+    desc: "Documentación práctica sobre comprensiones de listas en Haskell.",
+    category: "Teoría",
+    level: "Principiante",
+    author: "Material oficial",
+    date: "2026-07-15",
+  },
+};
+
+const importedPDFs = import.meta.glob("../../materialRecursos/*.pdf", {
+  as: "url",
+  eager: true,
+});
+
+const embeddedResources = Object.entries(importedPDFs).map(([path, url], index) => {
+  const fileName = path.split("/").pop();
+  const metadata = embeddedPDFMetadata[fileName] || {
+    title: fileName.replace(/\.pdf$/i, ""),
+    desc: "Documento PDF disponible para consulta.",
+    category: "General",
+    level: "Intermedio",
+    author: "Material oficial",
+    date: "2026-07-01",
+  };
+  return {
+    id: 100 + index,
+    type: "PDF",
+    title: metadata.title,
+    desc: metadata.desc,
+    author: metadata.author,
+    category: metadata.category,
+    level: metadata.level,
+    date: metadata.date,
+    url,
+  };
+});
+
+const initialResources = [
+  ...embeddedResources,
   {
-    id: 2,
+    id: 1,
     type: "LINK",
     title: "Haskell paso a paso",
     desc: "Curso interactivo con ejercicios básicos y retroalimentación.",
@@ -26,17 +71,6 @@ const initialResources = [
     level: "Principiante",
     date: "2026-07-18",
     url: "https://example.com/haskell",
-  },
-  {
-    id: 3,
-    type: "PDF",
-    title: "Recursividad y casos base",
-    desc: "Apuntes breves para comprender llamadas recursivas.",
-    author: "Ana P.",
-    category: "Recursividad",
-    level: "Intermedio",
-    date: "2026-07-15",
-    url: null,
   },
 ];
 
