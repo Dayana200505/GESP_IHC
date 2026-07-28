@@ -52,6 +52,25 @@ function App() {
     setIsAuthenticated(false);
   }
 
+  // Se pidió una explicación (se "intentó" el ejercicio) pero todavía no
+  // se guardó. El siguiente ejercicio pendiente pasa a "in-progress" y
+  // suma progreso parcial — esto ya alimenta la barra general de Mi
+  // Progreso aunque el ejercicio no quede completado.
+  function handleAttemptProgress() {
+    setExercises((current) => {
+      const nextIndex = current.findIndex((item) => item.status === "not-started");
+      if (nextIndex === -1) return current;
+      return current.map((item, index) =>
+        index === nextIndex
+          ? { ...item, status: "in-progress", progress: Math.max(item.progress, 45) }
+          : item
+      );
+    });
+  }
+
+  // Se guardó sin errores y con sesión iniciada: recién acá el ejercicio
+  // (el primero que no esté completado, típicamente el que quedó
+  // "in-progress" tras el intento) se marca como completado al 100%.
   function handleSaveCorrectProgress() {
     setExercises((current) => {
       const nextIndex = current.findIndex((item) => item.status !== "completed");
@@ -76,6 +95,7 @@ function App() {
           element={
             <Home
               isAuthenticated={isAuthenticated}
+              onAttempt={handleAttemptProgress}
               onSaveCorrect={handleSaveCorrectProgress}
             />
           }
@@ -125,7 +145,7 @@ function App() {
           path="/progreso"
           element={
             isAuthenticated ? (
-              <Progreso exercises={exercises} setExercises={setExercises} />
+              <Progreso exercises={exercises} />
             ) : (
               <Navigate to="/login" replace />
             )

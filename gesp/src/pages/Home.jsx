@@ -213,8 +213,19 @@ const DEFAULT_CODE = `sumList :: [Int] -> Int
 sumList [] = 0
 sumList (x:xs) = x + sumList xs`;
 
-function Home({ isAuthenticated, onSaveCorrect }) {
-  const [code, setCode] = useState(DEFAULT_CODE);
+/**
+ * Home / Editor de código.
+ *
+ * Props nuevas (opcionales, no rompen el uso original):
+ *  - exercise: { id, title, difficulty, code } — si se pasa, precarga el editor
+ *              con ese código y muestra un encabezado "Resolviendo: ...".
+ *  - onBack: () => void — vuelve a la pantalla de Mi Progreso.
+ *  - onAttempt: () => void — se dispara cuando termina una explicación
+ *              (con o sin error). Úsalo para sumar progreso parcial en
+ *              Mi Progreso aunque el ejercicio no se guarde como completado.
+ */
+function Home({ isAuthenticated, onSaveCorrect, onAttempt, exercise, onBack }) {
+  const [code, setCode] = useState(exercise?.code ?? DEFAULT_CODE);
 
   const [mode, setMode] = useState("idle"); // idle | line | full
   const [selectedLine, setSelectedLine] = useState(null);
@@ -278,6 +289,7 @@ function Home({ isAuthenticated, onSaveCorrect }) {
       setFullSteps([{ lineNumber: null, fragments: [`Error detectado: ${syntax.msg}`] }]);
       setVisibleCount(1);
       setCanSave(true);
+      onAttempt?.();
       return;
     }
 
@@ -297,6 +309,7 @@ function Home({ isAuthenticated, onSaveCorrect }) {
         clearInterval(intervalRef.current);
         setIsExplaining(false);
         setCanSave(true);
+        onAttempt?.();
       }
     }, 450);
   }
@@ -320,92 +333,110 @@ function Home({ isAuthenticated, onSaveCorrect }) {
   }
 
   return (
-    <div className="home-container">
-      {/* Columna izquierda: Editor */}
-      <div className="card editor-card">
-        <h2>Editor de código</h2>
-
-        <div className="code-editor">
-          <div className="line-numbers">
-            {lines.map((_, idx) => (
-              <button
-                key={idx}
-                type="button"
-                className={`line-number ${selectedLine === idx + 1 ? "active" : ""}`}
-                onClick={() => handleLineClick(idx + 1)}
-                title={`Explicar línea ${idx + 1}`}
-              >
-                {idx + 1}
-              </button>
-            ))}
-          </div>
-
-          <div className="code-area-wrapper">
-            {selectedLine && (
-              <div className="line-highlight" style={{ top: `${(selectedLine - 1) * LINE_HEIGHT + CODE_EDITOR_PADDING_TOP}px` }} />
+    <div className="home-page">
+      {exercise && (
+        <div className="home-topbar">
+          <button type="button" className="back-link" onClick={onBack}>
+            ← Volver a Mi Progreso
+          </button>
+          <div className="home-topbar-info">
+            Resolviendo: <strong>{exercise.title}</strong>
+            {exercise.difficulty && (
+              <span className={`badge-diff badge-diff-${exercise.difficulty.toLowerCase()}`}>
+                {exercise.difficulty}
+              </span>
             )}
-            <textarea
-              className="code-area"
-              value={code}
-              onChange={handleCodeChange}
-              spellCheck={false}
-              rows={Math.max(lines.length, 10)}
-            />
+          </div>
+        </div>
+      )}
+
+      <div className="home-container">
+        {/* Columna izquierda: Editor */}
+        <div className="card editor-card">
+          <h2>Editor de código</h2>
+
+          <div className="code-editor">
+            <div className="line-numbers">
+              {lines.map((_, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  className={`line-number ${selectedLine === idx + 1 ? "active" : ""}`}
+                  onClick={() => handleLineClick(idx + 1)}
+                  title={`Explicar línea ${idx + 1}`}
+                >
+                  {idx + 1}
+                </button>
+              ))}
+            </div>
+
+            <div className="code-area-wrapper">
+              {selectedLine && (
+                <div className="line-highlight" style={{ top: `${(selectedLine - 1) * LINE_HEIGHT + CODE_EDITOR_PADDING_TOP}px` }} />
+              )}
+              <textarea
+                className="code-area"
+                value={code}
+                onChange={handleCodeChange}
+                spellCheck={false}
+                rows={Math.max(lines.length, 10)}
+              />
+            </div>
+          </div>
+
+          <p className="editor-hint">Haz clic en el número de una línea para ver su explicación individual.</p>
+
+          <div className="editor-actions">
+            <button className="btn btn-primary" onClick={handleExplainFunction} disabled={isExplaining}>
+              {isExplaining ? "Analizando código..." : "Explicar función"}
+            </button>
           </div>
         </div>
 
-        <p className="editor-hint">Haz clic en el número de una línea para ver su explicación individual.</p>
-
-        <div className="editor-actions">
-          <button className="btn btn-primary" onClick={handleExplainFunction} disabled={isExplaining}>
-            {isExplaining ? "Analizando código..." : "Explicar función"}
-          </button>
-        </div>
-      </div>
-
-      {/* Columna derecha: Explicación */}
-      <div className="card explanation-card">
-        <div className="explanation-header">
-          <div>
-            <h2>Explicación guiada</h2>
-            <p className="mode-label">
-              {mode === "line" && "Modo: Línea individual"}
-              {mode === "full" && "Modo: Explicación completa"}
-              {mode === "idle" && "Selecciona una línea o explica toda la función"}
-            </p>
+        {/* Columna derecha: Explicación */}
+        <div className="card explanation-card">
+          <div className="explanation-header">
+            <div>
+              <h2>Explicación guiada</h2>
+              <p className="mode-label">
+                {mode === "line" && "Modo: Línea individual"}
+                {mode === "full" && "Modo: Explicación completa"}
+                {mode === "idle" && "Selecciona una línea o explica toda la función"}
+              </p>
+            </div>
+            {mode === "line" && selectedLine && <span className="line-badge">Línea [{selectedLine}]</span>}
           </div>
-          {mode === "line" && selectedLine && <span className="line-badge">Línea [{selectedLine}]</span>}
-        </div>
 
-        <div className="explanation-body">
-          {mode === "idle" && (
-            <div className="help-text">Genera una explicación o haz clic en una línea para ver los pasos.</div>
-          )}
+          <div className="explanation-body">
+            {mode === "idle" && (
+              <div className="help-text">Genera una explicación o haz clic en una línea para ver los pasos.</div>
+            )}
 
-          {mode === "line" &&
-            lineFragments.map((frag, i) => (
-              <div key={i} className="ex-step">
-                {frag}
-              </div>
-            ))}
+            {mode === "line" &&
+              lineFragments.map((frag, i) => (
+                <div key={i} className="ex-step">
+                  {frag}
+                </div>
+              ))}
 
-          {mode === "full" &&
-            fullSteps.slice(0, visibleCount).map((step, i) => (
-              <div key={i} className={`ex-block ${hasError ? "error" : ""}`}>
-                {step.lineNumber && <span className="ex-line-tag">Línea {step.lineNumber}</span>}
-                {step.fragments.map((f, j) => (
-                  <div key={j} className={`ex-step ${hasError ? "error" : ""}`}>
-                    {f}
-                  </div>
-                ))}
-              </div>
-            ))}
-        </div>
+            {mode === "full" &&
+              fullSteps.slice(0, visibleCount).map((step, i) => (
+                <div key={i} className={`ex-block ${hasError ? "error" : ""}`}>
+                  {step.lineNumber && <span className="ex-line-tag">Línea {step.lineNumber}</span>}
+                  {step.fragments.map((f, j) => (
+                    <div key={j} className={`ex-step ${hasError ? "error" : ""}`}>
+                      {f}
+                    </div>
+                  ))}
+                </div>
+              ))}
+          </div>
 
-        <div className="action-row">
-          <button className="btn btn-save" disabled={!canSave} onClick={handleSave}>
-            Guardar progreso
-          </button>
+          <div className="action-row">
+            <button className="btn btn-save" disabled={!canSave} onClick={handleSave}>
+              Guardar progreso
+            </button>
+          </div>
         </div>
       </div>
 

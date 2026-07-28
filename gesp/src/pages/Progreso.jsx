@@ -1,9 +1,20 @@
-﻿import React, { useMemo } from "react";
+﻿import React, { useState, useMemo } from "react";
+import { Link } from "react-router-dom";
 import "./Progreso.css";
 
-function Progreso({ exercises, setExercises }) {
-  const [filter, setFilter] = React.useState("Todos");
-  const [topicFilter, setTopicFilter] = React.useState("");
+/**
+ * Mi Progreso.
+ *
+ * Este componente NO guarda ni marca ejercicios como completados —
+ * eso ocurre en Home.jsx (editor), a través de onAttempt/onSaveCorrect
+ * en App.jsx. Aquí solo se lee y se filtra el estado ya calculado.
+ *
+ * Props:
+ *  - exercises: [{ id, title, desc, difficulty, topic, status, progress }]
+ */
+function Progreso({ exercises }) {
+  const [levelFilter, setLevelFilter] = useState("Todos");
+  const [topicFilter, setTopicFilter] = useState("");
 
   const total = exercises.length;
   const completedCount = exercises.filter((item) => item.status === "completed").length;
@@ -11,25 +22,27 @@ function Progreso({ exercises, setExercises }) {
     exercises.reduce((sum, item) => sum + item.progress, 0) / (total || 1)
   );
 
-  const themes = ["Listas", "Recursividad", "Funciones", "Tipos"];
+  const themes = [...new Set(exercises.map((item) => item.topic))];
 
   const filteredExercises = useMemo(() => {
     return exercises.filter((item) => {
-      if (filter !== "Todos" && item.difficulty !== filter) return false;
+      if (levelFilter !== "Todos" && item.difficulty !== levelFilter) return false;
       if (topicFilter && item.topic !== topicFilter) return false;
       return true;
     });
-  }, [exercises, filter, topicFilter]);
+  }, [exercises, levelFilter, topicFilter]);
 
-  const handleToggleStatus = (id) => {
-    setExercises((current) =>
-      current.map((item) => {
-        if (item.id !== id) return item;
-        if (item.status === "completed") return { ...item, status: "not-started", progress: 0 };
-        if (item.status === "in-progress") return { ...item, status: "completed", progress: 100 };
-        return { ...item, status: "in-progress", progress: 45 };
-      })
-    );
+  const levelOptions = [
+    { label: "Todos", value: "Todos", count: total },
+    { label: "Fácil", value: "Fácil", count: exercises.filter((e) => e.difficulty === "Fácil").length },
+    { label: "Intermedio", value: "Intermedio", count: exercises.filter((e) => e.difficulty === "Intermedio").length },
+    { label: "Difícil", value: "Difícil", count: exercises.filter((e) => e.difficulty === "Difícil").length },
+  ];
+
+  const statusLabel = (status) => {
+    if (status === "completed") return "Completado";
+    if (status === "in-progress") return "En progreso";
+    return "Siguiente";
   };
 
   return (
@@ -57,18 +70,13 @@ function Progreso({ exercises, setExercises }) {
           <div className="sidebar-card">
             <h3>Niveles</h3>
             <div className="sidebar-filter">
-              {[
-                { label: `Todos (${total})`, value: "Todos" },
-                { label: `Fácil (${exercises.filter((item) => item.difficulty === "Fácil").length})`, value: "Fácil" },
-                { label: `Intermedio (${exercises.filter((item) => item.difficulty === "Intermedio").length})`, value: "Intermedio" },
-                { label: `Difícil (${exercises.filter((item) => item.difficulty === "Difícil").length})`, value: "Difícil" }
-              ].map((option) => (
+              {levelOptions.map((option) => (
                 <button
                   key={option.value}
-                  className={`level-chip ${filter === option.value ? "active" : ""}`}
-                  onClick={() => setFilter(option.value)}
+                  className={`level-chip ${levelFilter === option.value ? "active" : ""}`}
+                  onClick={() => setLevelFilter(option.value)}
                 >
-                  {option.label}
+                  {option.label} ({option.count})
                 </button>
               ))}
             </div>
@@ -92,33 +100,29 @@ function Progreso({ exercises, setExercises }) {
 
         <section className="progress-exercises">
           {filteredExercises.map((exercise) => (
-            <div className="exercise-card" key={exercise.id}>
+            <Link className="exercise-card" key={exercise.id} to="/">
               <div className="exercise-main">
                 <div className="ex-index">{exercise.id}.</div>
                 <div className="ex-body">
                   <div className="ex-title">{exercise.title}</div>
                   <div className="ex-desc">{exercise.desc}</div>
+                  <div className="small-bar">
+                    <div className="small-fill" style={{ width: `${exercise.progress}%` }} />
+                  </div>
                 </div>
               </div>
               <div className="exercise-meta">
                 <div className={`difficulty ${exercise.difficulty.toLowerCase()}`}>{exercise.difficulty}</div>
                 <div className="topic-tag">{exercise.topic}</div>
-                <div className="small-bar">
-                  <div className="small-fill" style={{ width: `${exercise.progress}%` }}></div>
+                <div className={`status ${exercise.status === "completed" ? "done" : exercise.status === "in-progress" ? "progress" : ""}`}>
+                  {statusLabel(exercise.status)}
                 </div>
-                <button
-                  className={`status ${exercise.status === "completed" ? "done" : exercise.status === "in-progress" ? "progress" : ""}`}
-                  onClick={() => handleToggleStatus(exercise.id)}
-                >
-                  {exercise.status === "completed"
-                    ? "Completado"
-                    : exercise.status === "in-progress"
-                    ? "En progreso"
-                    : "Siguiente"}
-                </button>
               </div>
-            </div>
+            </Link>
           ))}
+          {filteredExercises.length === 0 && (
+            <div className="empty">No hay ejercicios con estos filtros.</div>
+          )}
         </section>
       </div>
     </div>
