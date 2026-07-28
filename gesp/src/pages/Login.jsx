@@ -22,7 +22,7 @@ function validate(values) {
 }
 
 function Login({ onLoginSuccess }) {
-  const [mode, setMode] = useState("login");
+  const [mode, setMode] = useState("login"); // login | forgot | verify
   const [values, setValues] = useState({ email: "", password: "", code: "" });
   const [errors, setErrors] = useState({});
   const [message, setMessage] = useState("");
@@ -69,105 +69,161 @@ function Login({ onLoginSuccess }) {
     setMessage("Código verificado. Ingresa tu contraseña para continuar.");
   };
 
+  const titles = {
+    login: "Bienvenido de nuevo",
+    forgot: "¿Olvidaste tu contraseña?",
+    verify: "Ingresa el código de verificación",
+  };
+
+  const subtitles = {
+    login: "Inicia sesión para continuar aprendiendo.",
+    forgot: "Ingresa el correo electrónico de tu cuenta.",
+    verify: "Ingresa el código de verificación que enviamos a tu correo electrónico.",
+  };
+
   return (
     <div className="login-page">
-      <div className="login-panel login-panel-left">
-        <div className="brand-badge">GESP</div>
-        <h1>Comprende Haskell paso a paso</h1>
-        <p className="login-subtitle">Aprende con ejemplos, ejercicios guiados y seguimiento claro de tu progreso.</p>
+      <div className="login-shell">
+        {/* Columna izquierda: identidad de marca */}
+        <div className="login-panel login-panel-left">
+          <div className="brand-badge">GESP</div>
 
-        <div className="code-preview">
-          <div className="code-header">{`map (\\x -> x * 2) [1,2,3]`}</div>
-          <div className="code-result">Resultado: [2,4,6]</div>
+          <h1>
+            Comprende Haskell
+            <br />
+            paso a paso
+          </h1>
+          <p className="login-subtitle">
+            Explicaciones claras, ejercicios guiados y seguimiento de tu progreso.
+          </p>
+
+          <div className="code-preview">
+            <div className="code-preview-line">
+              <span className="code-fn">map</span> (\x -&gt; x * 2) [1,2,3]
+            </div>
+            <div className="code-result">Resultado: [2,4,6]</div>
+          </div>
+
+          <div className="login-pill-row">
+            <span className="pill-pill">Aprendizaje guiado</span>
+            <span className="pill-pill">Progreso visible</span>
+          </div>
         </div>
 
-        <div className="login-pill-row">
-          <span className="pill-pill">Aprendizaje guiado</span>
-          <span className="pill-pill">Progreso visible</span>
-        </div>
-      </div>
+        {/* Columna derecha: formulario */}
+        <div className="login-panel login-panel-right">
+          <div className="login-card">
+            <h2>{titles[mode]}</h2>
+            <p className="login-card-subtitle">{subtitles[mode]}</p>
 
-      <div className="login-panel login-panel-right">
-        <div className="login-card">
-          <h2>{mode === "login" ? "Bienvenido de nuevo" : mode === "forgot" ? "¿Olvidaste tu contraseña?" : "Ingresar código de verificación"}</h2>
-          <p>{mode === "login" ? "Inicia sesión para continuar aprendiendo." : mode === "forgot" ? "Escribe tu correo para recibir el código." : "Revisa tu correo y escribe el código aquí."}</p>
-
-          <form className="login-form" onSubmit={handleSubmit} noValidate>
-            <label>
-              <span>Correo electrónico</span>
-              <input
-                type="email"
-                name="email"
-                placeholder="nombre@correo.com"
-                value={values.email}
-                onChange={handleChange}
-              />
-              {errors.email && <small className="field-error">{errors.email}</small>}
-            </label>
-
-            {mode === "login" && (
-              <label>
-                <span>Contraseña</span>
+            <form className="login-form" onSubmit={handleSubmit} noValidate>
+              <label className={errors.email ? "field field-invalid" : "field"}>
+                <span>Correo electrónico</span>
                 <input
-                  type="password"
-                  name="password"
-                  placeholder="********"
-                  value={values.password}
+                  type="email"
+                  name="email"
+                  placeholder="nombre@correo.com"
+                  value={values.email}
                   onChange={handleChange}
+                  autoComplete="email"
                 />
-                {errors.password && <small className="field-error">{errors.password}</small>}
+                {errors.email && <small className="field-error">{errors.email}</small>}
               </label>
-            )}
 
-            {mode === "verify" && (
-              <label>
-                <span>Código de verificación</span>
-                <input
-                  type="text"
-                  name="code"
-                  placeholder="123456"
-                  value={values.code}
-                  onChange={handleChange}
-                />
-                {errors.code && <small className="field-error">{errors.code}</small>}
-              </label>
-            )}
-
-            {message && <div className="info-box">{message}</div>}
-
-            {mode === "login" ? (
-              <div className="login-form-row checkbox-row">
-                <label>
-                  <input type="checkbox" />
-                  Recordarme
+              {mode === "login" && (
+                <label className={errors.password ? "field field-invalid" : "field"}>
+                  <span>Contraseña</span>
+                  <input
+                    type="password"
+                    name="password"
+                    placeholder="••••••••"
+                    value={values.password}
+                    onChange={handleChange}
+                    autoComplete="current-password"
+                  />
+                  {errors.password && <small className="field-error">{errors.password}</small>}
                 </label>
-                <button type="button" className="forgot-link" onClick={() => setMode("forgot")}>¿Olvidaste tu contraseña?</button>
-              </div>
-            ) : null}
+              )}
 
-            <button type="submit" className="btn btn-login">
-              {mode === "login" ? "Iniciar sesión" : mode === "forgot" ? "Enviar" : "Verificar Código"}
-            </button>
-          </form>
+              {mode === "verify" && (
+                <label className={errors.code ? "field field-invalid" : "field"}>
+                  <span>Código de verificación</span>
+                  <input
+                    type="text"
+                    name="code"
+                    placeholder="Ingresa el código"
+                    value={values.code}
+                    onChange={handleChange}
+                    inputMode="numeric"
+                  />
+                  {errors.code && <small className="field-error">{errors.code}</small>}
+                </label>
+              )}
 
-          <div className="login-footer">
-            <span>{mode === "login" ? "¿Aún no tienes una cuenta?" : "¿Recordaste tu contraseña?"}</span>
-            {mode === "login" ? (
-              <Link to="/register">Regístrate</Link>
-            ) : (
-              <button type="button" className="link-button" onClick={() => setMode("login")}>Inicia sesión</button>
-            )}
+              {message && <div className="info-box">{message}</div>}
+
+              {mode === "login" && (
+                <div className="login-form-row checkbox-row">
+                  <label className="checkbox-label">
+                    <input type="checkbox" />
+                    <span>Recordarme</span>
+                  </label>
+                  <button
+                    type="button"
+                    className="forgot-link"
+                    onClick={() => setMode("forgot")}
+                  >
+                    ¿Olvidaste tu contraseña?
+                  </button>
+                </div>
+              )}
+
+              <button type="submit" className="btn btn-primary btn-block">
+                {mode === "login" ? "Iniciar sesión" : mode === "forgot" ? "Enviar" : "Verificar Código"}
+              </button>
+            </form>
+
+            <div className="login-divider" />
+
+            <div className="login-footer">
+              {mode === "login" ? (
+                <>
+                  <span>¿Aún no tienes una cuenta?</span>{" "}
+                  <Link to="/register" className="footer-link">
+                    Regístrate
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <span>¿Recordaste tu contraseña?</span>{" "}
+                  <button type="button" className="footer-link link-button" onClick={() => setMode("login")}>
+                    Inicia sesión
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
       {showVerified && (
-        <div className="modal-backdrop">
+        <div className="modal-backdrop" role="dialog" aria-modal="true">
           <div className="modal">
+            <button
+              type="button"
+              className="modal-close"
+              aria-label="Cerrar"
+              onClick={handleVerifiedContinue}
+            >
+              ×
+            </button>
+            <div className="modal-icon modal-icon-success">✓</div>
             <h3>Código verificado</h3>
             <p>Tu cuenta ha sido verificada correctamente.</p>
             <div className="modal-actions">
-              <button className="btn btn-primary" onClick={handleVerifiedContinue}>Continuar</button>
+              <button className="btn btn-primary btn-block" onClick={handleVerifiedContinue}>
+                Continuar
+              </button>
             </div>
           </div>
         </div>
