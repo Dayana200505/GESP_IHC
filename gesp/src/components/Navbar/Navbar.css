@@ -71,6 +71,19 @@
     cursor:pointer;
 }
 
+.navbar-profile .avatar-circle {
+    width: 40px;
+    height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: #4b5563;
+    color: #f8fafc;
+    font-weight: 700;
+    cursor: pointer;
+}
+
 /* Remove default page margin so navbar sits flush */
 body{
     margin:0;
