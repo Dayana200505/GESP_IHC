@@ -1,8 +1,8 @@
-﻿import React, { useState, useRef, useEffect } from "react";
+﻿import { useState, useRef, useEffect } from "react";
 import "./Home.css";
 
 const LINE_HEIGHT = 21; // debe coincidir con --line-height en Home.css
-const CODE_EDITOR_PADDING_TOP = 16;
+const CODE_EDITOR_PADDING_TOP = 15;
 
 function parseRange(str) {
   const rangeMatch = str.match(/\[\s*(-?\d+)\s*\.\.\s*(-?\d+)\s*\]/);
@@ -229,7 +229,9 @@ function Home({ isAuthenticated, onSaveCorrect, onAttempt, exercise, onBack }) {
 
   const [mode, setMode] = useState("idle"); // idle | line | full
   const [selectedLine, setSelectedLine] = useState(null);
+  const [pendingLine, setPendingLine] = useState(null);
   const [lineFragments, setLineFragments] = useState([]);
+  const [isLineExplaining, setIsLineExplaining] = useState(false);
 
   const [fullSteps, setFullSteps] = useState([]);
   const [visibleCount, setVisibleCount] = useState(0);
@@ -244,19 +246,29 @@ function Home({ isAuthenticated, onSaveCorrect, onAttempt, exercise, onBack }) {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const intervalRef = useRef();
+  const lineTimeoutRef = useRef();
 
-  useEffect(() => () => clearInterval(intervalRef.current), []);
+  useEffect(
+    () => () => {
+      clearInterval(intervalRef.current);
+      clearTimeout(lineTimeoutRef.current);
+    },
+    []
+  );
 
   const lines = code.split("\n");
 
   function resetExplanationState() {
     clearInterval(intervalRef.current);
+    clearTimeout(lineTimeoutRef.current);
     setMode("idle");
     setSelectedLine(null);
+    setPendingLine(null);
     setLineFragments([]);
     setFullSteps([]);
     setVisibleCount(0);
     setIsExplaining(false);
+    setIsLineExplaining(false);
     setCanSave(false);
     setHasError(false);
   }
@@ -268,11 +280,23 @@ function Home({ isAuthenticated, onSaveCorrect, onAttempt, exercise, onBack }) {
 
   function handleLineClick(lineNumber) {
     clearInterval(intervalRef.current);
+    clearTimeout(lineTimeoutRef.current);
+
     const text = lines[lineNumber - 1] ?? "";
     setMode("line");
     setSelectedLine(lineNumber);
-    setLineFragments(explainLine(text));
+    setPendingLine(lineNumber);
+    setLineFragments([]);
     setIsExplaining(false);
+    setIsLineExplaining(true);
+    setCanSave(false);
+
+    lineTimeoutRef.current = setTimeout(() => {
+      setLineFragments(explainLine(text));
+      setPendingLine(null);
+      setIsLineExplaining(false);
+      setCanSave(true);
+    }, 520);
     if (text.trim().length > 0) {
       setCanSave(true);
     }
@@ -280,11 +304,15 @@ function Home({ isAuthenticated, onSaveCorrect, onAttempt, exercise, onBack }) {
 
   function handleExplainFunction() {
     clearInterval(intervalRef.current);
+    clearTimeout(lineTimeoutRef.current);
     setMode("full");
     setSelectedLine(null);
+    setPendingLine(null);
     setHasError(false);
     setCanSave(false);
     setVisibleCount(0);
+    setIsLineExplaining(false);
+    setLineFragments([]);
 
     const syntax = checkSyntax(code);
     if (!syntax.ok) {
@@ -363,17 +391,48 @@ function Home({ isAuthenticated, onSaveCorrect, onAttempt, exercise, onBack }) {
 
           <div className="code-editor">
             <div className="line-numbers">
-              {lines.map((_, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  className={`line-number ${selectedLine === idx + 1 ? "active" : ""}`}
-                  onClick={() => handleLineClick(idx + 1)}
-                  title={`Explicar línea ${idx + 1}`}
-                >
-                  {idx + 1}
-                </button>
-              ))}
+              {lines.map((_, idx) => {
+                const lineNumber = idx + 1;
+                const isSelected = selectedLine === lineNumber;
+                const isLoadingLine = isLineExplaining && pendingLine === lineNumber;
+
+                return (
+                  <div
+                    key={lineNumber}
+                    className={`line-row ${isSelected ? "active" : ""} ${isLoadingLine ? "loading" : ""}`}
+                  >
+                    <button
+                      type="button"
+                      className={`line-number ${isSelected ? "active" : ""}`}
+                      onClick={() => handleLineClick(lineNumber)}
+                      title={`Explicar línea ${lineNumber}`}
+                      disabled={isExplaining || isLineExplaining}
+                    >
+                      {lineNumber}
+                    </button>
+
+                    <button
+                      type="button"
+                      className={`line-action-btn ${isLoadingLine ? "loading" : ""}`}
+                      onClick={() => handleLineClick(lineNumber)}
+                      onMouseDown={(event) => event.preventDefault()}
+                      title={`Generar explicación de la línea ${lineNumber}`}
+                      aria-label={`Generar explicación de la línea ${lineNumber}`}
+                      disabled={isExplaining || isLineExplaining}
+                    >
+                      {isLoadingLine ? (
+                        <span className="line-action-loading" aria-hidden="true">
+                          <span className="spinner" />
+                        </span>
+                      ) : (
+                        <span className="line-action-icon" aria-hidden="true">
+                          ▶
+                        </span>
+                      )}
+                    </button>
+                  </div>
+                );
+              })}
             </div>
 
             <div className="code-area-wrapper">
@@ -390,10 +449,10 @@ function Home({ isAuthenticated, onSaveCorrect, onAttempt, exercise, onBack }) {
             </div>
           </div>
 
-          <p className="editor-hint">Haz clic en el número de una línea para ver su explicación individual.</p>
+          <p className="editor-hint">Pasa el mouse por una línea para mostrar su botón de explicación individual.</p>
 
           <div className="editor-actions">
-            <button className="btn btn-primary" onClick={handleExplainFunction} disabled={isExplaining}>
+            <button className="btn btn-primary" onClick={handleExplainFunction} disabled={isExplaining || isLineExplaining}>
               {isExplaining ? "Analizando código..." : "Explicar función"}
             </button>
           </div>
@@ -415,14 +474,21 @@ function Home({ isAuthenticated, onSaveCorrect, onAttempt, exercise, onBack }) {
 
           <div className="explanation-body">
             {mode === "idle" && (
-              <div className="help-text">Genera una explicación o haz clic en una línea para ver los pasos.</div>
+              <div className="help-text">Pasa el mouse sobre una línea y presiona Explicar, o genera la explicación completa de la función.</div>
             )}
 
             {mode === "line" &&
-              lineFragments.map((frag, i) => (
-                <div key={i} className="ex-step">
-                  {frag}
+              (isLineExplaining ? (
+                <div className="line-loading-panel">
+                  <span className="spinner" aria-hidden="true" />
+                  <span>Generando la explicación de la línea seleccionada...</span>
                 </div>
+              ) : (
+                lineFragments.map((frag, i) => (
+                  <div key={i} className="ex-step">
+                    {frag}
+                  </div>
+                ))
               ))}
 
             {mode === "full" &&
