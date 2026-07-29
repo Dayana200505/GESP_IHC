@@ -244,6 +244,7 @@ function Home({ isAuthenticated, onSaveCorrect, onAttempt, exercise, onBack }) {
   const [showSaveErrorModal, setShowSaveErrorModal] = useState(false);
   const [showDraftModal, setShowDraftModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showClearModal, setShowClearModal] = useState(false);
 
   const intervalRef = useRef();
   const lineTimeoutRef = useRef();
@@ -366,6 +367,12 @@ function Home({ isAuthenticated, onSaveCorrect, onAttempt, exercise, onBack }) {
     setShowDraftModal(true);
   }
 
+  function handleClearEditor() {
+    setCode("");
+    resetExplanationState();
+    setShowClearModal(false);
+  }
+
   return (
     <div className="home-page">
       {exercise && (
@@ -452,10 +459,26 @@ function Home({ isAuthenticated, onSaveCorrect, onAttempt, exercise, onBack }) {
           <p className="editor-hint">Pasa el mouse por una línea para mostrar su botón de explicación individual.</p>
 
           <div className="editor-actions">
-            <button className="btn btn-primary" onClick={handleExplainFunction} disabled={isExplaining || isLineExplaining}>
-              {isExplaining ? "Analizando código..." : "Explicar función"}
-            </button>
-          </div>
+  <button
+    type="button"
+    className="btn btn-clear"
+    onClick={() => setShowClearModal(true)}
+    disabled={!code.trim() || isExplaining || isLineExplaining}
+  >
+    Limpiar editor
+  </button>
+
+  <button
+    type="button"
+    className="btn btn-primary"
+    onClick={handleExplainFunction}
+    disabled={isExplaining || isLineExplaining}
+  >
+    {isExplaining ? "Analizando código..." : "Explicar función"}
+  </button>
+</div>
+
+
         </div>
 
         {/* Columna derecha: Explicación */}
@@ -513,6 +536,54 @@ function Home({ isAuthenticated, onSaveCorrect, onAttempt, exercise, onBack }) {
       </div>
 
       {/* ===== Modales ===== */}
+
+      
+{showClearModal && (
+  <div
+    className="modal-backdrop"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="clear-editor-title"
+  >
+    <div className="modal">
+      <button
+        type="button"
+        className="modal-close"
+        aria-label="Cerrar"
+        onClick={() => setShowClearModal(false)}
+      >
+        ×
+      </button>
+
+      <div className="modal-icon modal-icon-warning">!</div>
+
+      <h3 id="clear-editor-title">¿Deseas limpiar el editor?</h3>
+
+      <p>
+        Se eliminará todo el código escrito y la explicación generada.
+        Esta acción no se puede deshacer.
+      </p>
+
+      <div className="modal-actions split">
+        <button
+          type="button"
+          className="btn btn-secondary"
+          onClick={() => setShowClearModal(false)}
+        >
+          Cancelar
+        </button>
+
+        <button
+          type="button"
+          className="btn btn-danger"
+          onClick={handleClearEditor}
+        >
+          Limpiar código
+        </button>
+      </div>
+    </div>
+  </div>
+)}
       {showAuthModal && (
         <div className="modal-backdrop" role="dialog" aria-modal="true">
           <div className="modal">
