@@ -70,7 +70,7 @@
 .line-numbers {
   display: flex;
   flex-direction: column;
-  padding: 15px 6px 16px 0;
+  padding: 15px 4px 16px 0;
   background: #0B1220;
 }
 .line-row {
@@ -173,7 +173,7 @@
   border: none;
   outline: none;
   resize: vertical;
-  padding: 12px 16px 16px;
+  padding: 15px 6px 16px;
   font-family: 'Fira Code', monospace;
   font-size: 13px;
   line-height: var(--line-height);

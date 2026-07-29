@@ -2,7 +2,7 @@
 import "./Home.css";
 
 const LINE_HEIGHT = 21; // debe coincidir con --line-height en Home.css
-const CODE_EDITOR_PADDING_TOP = 16;
+const CODE_EDITOR_PADDING_TOP = 15;
 
 function parseRange(str) {
   const rangeMatch = str.match(/\[\s*(-?\d+)\s*\.\.\s*(-?\d+)\s*\]/);
