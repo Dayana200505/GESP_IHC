@@ -88,7 +88,7 @@
   margin: 4px 0 16px;
 }
 
-/* ===== Tabs ===== */
+/* ===== Tabs (Documento PDF / Enlace externo) ===== */
 .mode-tabs {
   display: flex;
   gap: 8px;
@@ -106,17 +106,16 @@
   font-weight: 600;
   color: var(--text-secondary);
   cursor: pointer;
-  transition: all .15s ease;
+  transition: all 0.15s ease;
 }
 
 .tab.active {
   background: var(--navy);
   border-color: var(--navy);
-  color: #fff;
+  color: #ffffff;
 }
 
 /* ===== Dropzone ===== */
-
 .dropzone {
   border: 2px dashed #86d9a3;
   background: var(--green-light);
@@ -124,7 +123,7 @@
   padding: 20px;
   cursor: pointer;
   margin-bottom: 16px;
-  transition: background-color .15s ease, border-color .15s ease;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
 }
 
 .dropzone:hover,
@@ -145,7 +144,7 @@
   min-width: 40px;
   border-radius: 10px;
   background: var(--green);
-  color: #fff;
+  color: #ffffff;
   font-size: 11px;
   font-weight: 800;
   display: flex;
@@ -173,7 +172,14 @@
   width: 100%;
 }
 
-/* ===== Formularios ===== */
+/* ===== Campos de formulario ===== */
+.field-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--navy);
+  margin: 4px 0 6px;
+}
 
 .field {
   display: flex;
@@ -207,23 +213,23 @@
 .text-input,
 .link-input input,
 select {
-  width: 100%;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--navy);
   padding: 10px 12px;
   border-radius: var(--radius-sm);
   border: 1px solid #d9e2df;
   background: #fbfdfc;
-  font-family: inherit;
-  font-size: 13px;
-  color: var(--navy);
   outline: none;
-  transition: border-color .15s ease, box-shadow .15s ease;
+  width: 100%;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .text-input:focus,
 .link-input input:focus,
 select:focus {
   border-color: var(--green);
-  box-shadow: 0 0 0 3px rgba(34,197,94,.15);
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15);
 }
 
 .row {
@@ -234,7 +240,6 @@ select:focus {
 }
 
 /* ===== Botones ===== */
-
 .btn {
   font-family: inherit;
   font-size: 13px;
@@ -243,7 +248,7 @@ select:focus {
   border-radius: var(--radius-sm);
   padding: 11px 18px;
   cursor: pointer;
-  transition: background-color .15s ease, transform .05s ease;
+  transition: background-color 0.15s ease, transform 0.05s ease;
 }
 
 .btn-block {
@@ -252,7 +257,7 @@ select:focus {
 
 .btn-primary {
   background: var(--green);
-  color: #fff;
+  color: #ffffff;
 }
 
 .btn-primary:hover {
@@ -260,17 +265,19 @@ select:focus {
 }
 
 .btn-secondary {
-  background: #fff;
-  color: var(--navy);
+  background: #ffffff;
   border: 2px solid var(--navy);
+  color: var(--navy);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
 }
 
 .btn-secondary:hover {
   background: #f4faf6;
+  border-color: var(--green-mid);
 }
 
 .btn-outline {
-  background: #fff;
+  background: #ffffff;
   border: 1px solid var(--green);
   color: var(--green-mid);
   padding: 8px 16px;
@@ -294,11 +301,11 @@ select:focus {
 .small-note {
   font-size: 11px;
   color: var(--text-secondary);
-  margin-top: 10px;
+  margin: 10px 0 0;
   text-align: center;
 }
-/* ===== Columna derecha ===== */
 
+/* ===== Columna derecha ===== */
 .resources-header {
   display: flex;
   align-items: center;
@@ -314,12 +321,12 @@ select:focus {
 
 .search-group input {
   width: 100%;
+  font-family: inherit;
+  font-size: 13px;
   padding: 9px 34px 9px 12px;
   border-radius: var(--radius-pill);
   border: 1px solid #d9e2df;
   background: #fbfdfc;
-  font-family: inherit;
-  font-size: 13px;
   outline: none;
 }
 
@@ -333,13 +340,13 @@ select:focus {
   top: 50%;
   transform: translateY(-50%);
   font-size: 13px;
-  opacity: .6;
+  opacity: 0.6;
 }
 
 .controls {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
   gap: 12px;
   flex-wrap: wrap;
   margin: 16px 0;
@@ -356,11 +363,12 @@ select:focus {
   border: 1px solid #e2e8e4;
   border-radius: var(--radius-pill);
   padding: 7px 14px;
+  font-family: inherit;
   font-size: 12px;
   font-weight: 600;
   color: var(--text-secondary);
   cursor: pointer;
-  transition: .15s;
+  transition: all 0.15s ease;
 }
 
 .chip:hover {
@@ -370,18 +378,17 @@ select:focus {
 
 .chip.active {
   background: var(--navy);
-  color: white;
   border-color: var(--navy);
+  color: #ffffff;
 }
 
 .sort-select select {
   width: auto;
-  padding: 8px 10px;
   font-size: 12px;
+  padding: 8px 10px;
 }
 
 /* ===== Lista de recursos ===== */
-
 .resource-list {
   display: flex;
   flex-direction: column;
@@ -393,24 +400,24 @@ select:focus {
   border-radius: var(--radius-md);
   padding: 28px;
   text-align: center;
-  color: var(--text-secondary);
   font-size: 13px;
+  color: var(--text-secondary);
 }
 
 .resource-card {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
   gap: 16px;
   border: 1px solid #e2e8e4;
   border-radius: var(--radius-md);
   padding: 14px 16px;
-  transition: .15s;
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
 }
 
 .resource-card:hover {
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
   border-color: #cfe9d8;
-  box-shadow: 0 8px 20px rgba(15,23,42,.06);
 }
 
 .resource-card .left {
@@ -420,17 +427,17 @@ select:focus {
 }
 
 .pill {
-  padding: 4px 10px;
-  border-radius: var(--radius-pill);
   font-size: 10px;
   font-weight: 800;
-  margin-top: 2px;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
   white-space: nowrap;
+  margin-top: 2px;
 }
 
 .pill.pdf {
   background: var(--navy);
-  color: white;
+  color: #ffffff;
 }
 
 .pill.link {
@@ -461,38 +468,37 @@ select:focus {
 }
 
 /* ===== Modales ===== */
-
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(15,23,42,.45);
+  background: rgba(15, 23, 42, 0.45);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 9999;
+  z-index: 50;
   padding: 20px;
-  isolation: isolate;
 }
 
 .modal {
   position: relative;
-  width: 100%;
-  max-width: 380px;
-  padding: 32px;
-  background: white;
+  background: var(--surface);
   border-radius: var(--radius-md);
+  padding: 32px;
+  max-width: 380px;
+  width: 100%;
   text-align: center;
-  box-shadow: 0 20px 50px rgba(15,23,42,.25);
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.25);
 }
 
 .modal-close {
   position: absolute;
   top: 14px;
   right: 16px;
-  border: none;
   background: none;
-  color: var(--text-secondary);
+  border: none;
   font-size: 20px;
+  line-height: 1;
+  color: var(--text-secondary);
   cursor: pointer;
 }
 
@@ -505,8 +511,8 @@ select:focus {
   height: 44px;
   border-radius: 50%;
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
   margin: 0 auto 14px;
   font-size: 20px;
   font-weight: 700;
@@ -518,16 +524,17 @@ select:focus {
 }
 
 .modal h3 {
-  margin: 0 0 8px;
   font-size: 17px;
+  font-weight: 700;
   color: var(--navy);
+  margin: 0 0 8px;
 }
 
 .modal p {
-  margin: 0 0 20px;
+  font-size: 13px;
   color: var(--text-secondary);
   line-height: 1.5;
-  font-size: 13px;
+  margin: 0 0 20px;
 }
 
 .modal-actions {
@@ -538,186 +545,83 @@ select:focus {
 .modal-actions.split .btn {
   flex: 1;
 }
-/* ===== Visor de PDF ===== */
 
+/* ===== Visor de PDF ===== */
 .viewer-modal {
-  width: min(96vw, 1400px);
-  height: 92vh;
-  display: flex;
-  flex-direction: column;
-  padding: 0;
-  border-radius: 18px;
-  overflow: hidden;
+  max-width: 640px;
   text-align: left;
 }
 
 .viewer-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 18px 24px;
-  background: #ffffff;
-  border-bottom: 1px solid #e5e7eb;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
 }
 
 .viewer-header h3 {
   margin: 0;
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--navy);
 }
 
 .close-viewer {
-  width: 40px;
-  height: 40px;
+  background: none;
   border: none;
-  border-radius: 50%;
-  background: transparent;
+  font-size: 20px;
+  line-height: 1;
   color: var(--text-secondary);
-  font-size: 24px;
   cursor: pointer;
-  transition: .2s;
 }
 
 .close-viewer:hover {
-  background: #f3f4f6;
   color: var(--navy);
 }
 
-/* ===== Barra superior ===== */
-
 .viewer-toolbar {
   display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  padding: 12px 24px;
-  background: #f8fafc;
-  border-bottom: 1px solid #e5e7eb;
-  font-size: 13px;
+  justify-content: space-between;
+  font-size: 11px;
   color: var(--text-secondary);
+  background: #f4faf6;
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  margin-bottom: 12px;
 }
-
-.viewer-toolbar-actions {
-  margin-left: auto;
-  display: flex;
-  gap: 10px;
-}
-
-.btn-small {
-  padding: 8px 14px;
-  font-size: 12px;
-}
-
-/* ===== Aviso ===== */
-
-.viewer-fallback-hint {
-  margin: 14px 20px 0;
-  padding: 12px 16px;
-  border-radius: 10px;
-  background: #fef9c3;
-  border: 1px solid #fde68a;
-  color: #92400e;
-  font-size: 13px;
-}
-
-.viewer-fallback-hint .link-button {
-  border: none;
-  background: none;
-  color: #b45309;
-  font-weight: 600;
-  cursor: pointer;
-  text-decoration: underline;
-  padding: 0;
-}
-
-/* ===== Área del PDF ===== */
 
 .viewer-content {
-  flex: 1;
+  border: 1px solid #e2e8e4;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  min-height: 420px;
   display: flex;
-  justify-content: center;
   align-items: center;
-  background: #dfe3ea;
-  padding: 20px;
-  overflow: auto;
+  justify-content: center;
 }
 
 .viewer-frame {
   width: 100%;
-  height: 100%;
+  height: 420px;
   border: none;
-  background: white;
-  border-radius: 10px;
-  box-shadow: 0 10px 35px rgba(0,0,0,.18);
 }
 
 .viewer-placeholder {
-  background: white;
-  padding: 50px;
-  border-radius: 12px;
+  padding: 32px;
   text-align: center;
   color: var(--text-secondary);
-  box-shadow: 0 8px 20px rgba(0,0,0,.08);
+  font-size: 13px;
 }
 
 .viewer-placeholder p {
-  margin: 0 0 10px;
+  margin: 0 0 6px;
 }
 
 /* ===== Responsive ===== */
-
 @media (max-width: 900px) {
-
   .recursos-grid {
     grid-template-columns: 1fr;
   }
 
   .row {
     grid-template-columns: 1fr;
-  }
-
-  .resources-header {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .controls {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .resource-card {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .actions {
-    width: 100%;
-  }
-
-  .actions .btn {
-    width: 100%;
-  }
-
-  .viewer-modal {
-    width: 100%;
-    height: 100vh;
-    border-radius: 0;
-  }
-
-  .viewer-toolbar {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .viewer-toolbar-actions {
-    margin-left: 0;
-    width: 100%;
-  }
-
-  .viewer-toolbar-actions .btn,
-  .viewer-toolbar-actions a {
-    flex: 1;
   }
 }

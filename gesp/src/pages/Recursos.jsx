@@ -1,4 +1,4 @@
-﻿import React, { useState, useMemo, useRef, useEffect, useCallback } from "react";
+﻿import React, { useState, useMemo, useRef } from "react";
 import "./Recursos.css";
 
 const THEME_OPTIONS = ["Recursividad", "Funciones", "Teoría", "General"];
@@ -31,8 +31,9 @@ const embeddedPDFMetadata = {
   },
 };
 
-const importedPDFs = import.meta.glob("../../materialRecursos/*.pdf", {
-  as: "url",
+const importedPDFs = import.meta.glob("../materialRecursos/*.pdf", {
+  query: "?url",
+  import: "default",
   eager: true,
 });
 
@@ -74,124 +75,6 @@ const initialResources = [
   },
 ];
 
-// --- Helpers puros, fuera del componente para no recrearlos en cada render ---
-function isValidUrl(value) {
-  try {
-    const url = new URL(value);
-    return url.protocol === "http:" || url.protocol === "https:";
-  } catch {
-    return false;
-  }
-}
-
-const PDF_LOAD_TIMEOUT_MS = 4000;
-
-// --- Hook para bloquear el scroll del body mientras hay un modal abierto ---
-function useLockBodyScroll(isLocked) {
-  useEffect(() => {
-    if (!isLocked) return;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = previousOverflow;
-    };
-  }, [isLocked]);
-}
-
-// --- Visor de PDF como componente aparte ---
-function PDFViewerModal({ resource, onClose }) {
-  const [iframeLoaded, setIframeLoaded] = useState(false);
-  const [showFallbackHint, setShowFallbackHint] = useState(false);
-
-  useEffect(() => {
-    setIframeLoaded(false);
-    setShowFallbackHint(false);
-
-    // Si el iframe no dispara onLoad en este tiempo (común cuando el
-    // hosting bloquea la visualización embebida), mostramos el aviso.
-    const timer = window.setTimeout(() => {
-      setShowFallbackHint(true);
-    }, PDF_LOAD_TIMEOUT_MS);
-
-    return () => window.clearTimeout(timer);
-  }, [resource]);
-
-  if (!resource) return null;
-
-  return (
-    <div className="modal-backdrop" role="dialog" aria-modal="true">
-      <div className="modal viewer-modal">
-        <div className="viewer-header">
-          <h3>{resource.title}</h3>
-          <button type="button" className="close-viewer" aria-label="Cerrar visor" onClick={onClose}>
-            ×
-          </button>
-        </div>
-
-        <div className="viewer-toolbar">
-          <span>Archivo PDF</span>
-          <span>{resource.author}</span>
-          <div className="viewer-toolbar-actions">
-            <button
-              type="button"
-              className="btn btn-outline btn-small"
-              onClick={() => window.open(resource.url, "_blank", "noopener,noreferrer")}
-            >
-              Abrir en pestaña nueva
-            </button>
-            
-            <a
-              className="btn btn-outline btn-small"
-              href={resource.url}
-              download
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Descargar
-            </a>
-          </div>
-        </div>
-
-        {showFallbackHint && !iframeLoaded && (
-          <div className="viewer-fallback-hint">
-            <span>¿No se ve el documento aquí abajo?</span>{" "}
-            <button
-              type="button"
-              className="link-button"
-              onClick={() => window.open(resource.url, "_blank", "noopener,noreferrer")}
-            >
-              Ábrelo directamente en una pestaña nueva
-            </button>
-          </div>
-        )}
-
-        <div className="viewer-content">
-          {resource.url ? (
-            <iframe
-              key={resource.url}
-              src={resource.url}
-              title={resource.title}
-              className="viewer-frame"
-              onLoad={() => setIframeLoaded(true)}
-            />
-          ) : (
-            <div className="viewer-placeholder">
-              <p>Este es un documento de ejemplo del prototipo.</p>
-              <p>Sube tu propio archivo PDF para visualizarlo aquí directamente.</p>
-            </div>
-          )}
-        </div>
-
-        <div className="modal-actions">
-          <button className="btn btn-primary btn-block" onClick={onClose}>
-            Cerrar
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function Recursos() {
   const [resources, setResources] = useState(initialResources);
   const [mode, setMode] = useState("PDF");
@@ -216,10 +99,7 @@ function Recursos() {
   const fileInputRef = useRef(null);
   const searchInputRef = useRef(null);
 
-  const isAnyModalOpen = showConfirm || showSuccess || showDraftSaved || Boolean(selectedViewer);
-  useLockBodyScroll(isAnyModalOpen);
-
-  const handleDrop = useCallback((e) => {
+  function handleDrop(e) {
     e.preventDefault();
     setIsDragging(false);
     const dropped = e.dataTransfer.files && e.dataTransfer.files[0];
@@ -227,29 +107,41 @@ function Recursos() {
       setFile(dropped);
       setErrors((prev) => ({ ...prev, file: "" }));
     }
-  }, []);
-
-  const handleFileChange = useCallback((e) => {
+  }
+ 
+  function handleFileChange(e) {
     const selected = e.target.files && e.target.files[0];
     if (selected) {
       setFile(selected);
       setErrors((prev) => ({ ...prev, file: "" }));
     }
-  }, []);
-
-  const validateResource = useCallback(() => {
+  }
+ 
+  function isValidUrl(value) {
+    try {
+      const url = new URL(value);
+      return url.protocol === "http:" || url.protocol === "https:";
+    } catch {
+      return false;
+    }
+  }
+ 
+  function validateResource() {
     const nextErrors = {};
-
+ 
     if (mode === "PDF") {
       if (!file) {
         nextErrors.file = "Selecciona un archivo PDF.";
-      } else if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
+      } else if (
+        file.type !== "application/pdf" &&
+        !file.name.toLowerCase().endsWith(".pdf")
+      ) {
         nextErrors.file = "El archivo debe ser un PDF.";
       } else if (file.size > 10 * 1024 * 1024) {
         nextErrors.file = "El archivo no puede exceder 10 MB.";
       }
     }
-
+ 
     if (mode === "LINK") {
       if (!link.trim()) {
         nextErrors.link = "Introduce una URL.";
@@ -257,30 +149,30 @@ function Recursos() {
         nextErrors.link = "Introduce una URL válida (http(s)://).";
       }
     }
-
+ 
     if (!title.trim()) {
       nextErrors.title = "El título del recurso es obligatorio.";
     }
-
+ 
     if (!category) {
       nextErrors.category = "Selecciona una categoría.";
     }
-
+ 
     if (!level) {
       nextErrors.level = "Selecciona un nivel recomendado.";
     }
-
+ 
     return nextErrors;
-  }, [mode, file, link, title, category, level]);
-
+  }
+ 
   function handlePublish() {
     const validationErrors = validateResource();
     setErrors(validationErrors);
-
+ 
     if (Object.keys(validationErrors).length > 0) {
       return;
     }
-
+ 
     setShowConfirm(true);
   }
 
@@ -427,22 +319,22 @@ function Recursos() {
                 style={{ display: "none" }}
                 onChange={handleFileChange}
               />
-              {errors.file && <small className="field-error">{errors.file}</small>}
-            </>
+            {errors.file && <small className="field-error">{errors.file}</small>}
+          </>
           ) : (
-            <div className="link-input">
-              <input
-                placeholder="https://"
-                value={link}
-                onChange={(e) => {
+          <div className="link-input">
+            <input
+              placeholder="https://"
+              value={link}
+              onChange={(e) => {
                   setLink(e.target.value);
                   setErrors((prev) => ({ ...prev, link: "" }));
-                }}
-              />
-              {errors.link && <small className="field-error">{errors.link}</small>}
-            </div>
+              }}
+            />
+            {errors.link && <small className="field-error">{errors.link}</small>}
+          </div>
           )}
-
+ 
           <label className={errors.title ? "field field-invalid" : "field"}>
             <span className="field-label-text">
               Título del recurso
@@ -453,13 +345,12 @@ function Recursos() {
               placeholder="Ej.: Guía de recursividad en Haskell"
               value={title}
               onChange={(e) => {
-                setTitle(e.target.value);
-                setErrors((prev) => ({ ...prev, title: "" }));
+                  setTitle(e.target.value);
+                  setErrors((prev) => ({ ...prev, title: "" }));
               }}
             />
             {errors.title && <small className="field-error">{errors.title}</small>}
           </label>
-
           <div className="row">
             <div className="col">
               <label className={errors.category ? "field field-invalid" : "field"}>
@@ -564,7 +455,9 @@ function Recursos() {
               <button
                 type="button"
                 className={filterLevel === "Principiante" ? "chip active" : "chip"}
-                onClick={() => setFilterLevel(filterLevel === "Principiante" ? "" : "Principiante")}
+                onClick={() =>
+                  setFilterLevel(filterLevel === "Principiante" ? "" : "Principiante")
+                }
               >
                 Principiante
               </button>
@@ -689,7 +582,49 @@ function Recursos() {
       )}
 
       {/* ===== Visor de PDF ===== */}
-      <PDFViewerModal resource={selectedViewer} onClose={() => setSelectedViewer(null)} />
+      {selectedViewer && (
+        <div className="modal-backdrop" role="dialog" aria-modal="true">
+          <div className="modal viewer-modal">
+            <div className="viewer-header">
+              <h3>{selectedViewer.title}</h3>
+              <button
+                type="button"
+                className="close-viewer"
+                aria-label="Cerrar visor"
+                onClick={() => setSelectedViewer(null)}
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="viewer-toolbar">
+              <span>Archivo PDF</span>
+              <span>{selectedViewer.author}</span>
+            </div>
+
+            <div className="viewer-content">
+              {selectedViewer.url ? (
+                <iframe
+                  src={selectedViewer.url}
+                  title={selectedViewer.title}
+                  className="viewer-frame"
+                />
+              ) : (
+                <div className="viewer-placeholder">
+                  <p>Este es un documento de ejemplo del prototipo.</p>
+                  <p>Sube tu propio archivo PDF para visualizarlo aquí directamente.</p>
+                </div>
+              )}
+            </div>
+
+            <div className="modal-actions">
+              <button className="btn btn-primary btn-block" onClick={() => setSelectedViewer(null)}>
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
