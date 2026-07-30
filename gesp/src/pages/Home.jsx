@@ -184,18 +184,124 @@ function explainLine(rawLine) {
   return [`Analiza la expresión "${line}" y describe qué realiza dentro del programa.`];
 }
 
-function checkSyntax(text) {
+/* ============================================================
+   VALIDACIÓN DE SINTAXIS
+   ============================================================ */
+
+function checkBrackets(text) {
   const stack = [];
   const pairs = { ")": "(", "]": "[", "}": "{" };
+  const openers = ["(", "[", "{"];
+  const closers = [")", "]", "}"];
+  let line = 1;
+
   for (const ch of text) {
-    if (["(", "[", "{"].includes(ch)) stack.push(ch);
-    if ([")", "]", "}"].includes(ch)) {
-      if (stack.length === 0 || stack.pop() !== pairs[ch]) {
-        return { ok: false, msg: "Paréntesis o corchetes sin cerrar correctamente." };
+    if (ch === "\n") line += 1;
+    if (openers.includes(ch)) stack.push({ ch, line });
+    if (closers.includes(ch)) {
+      const last = stack.pop();
+      if (!last || last.ch !== pairs[ch]) {
+        return `Símbolo "${ch}" sin su apertura correspondiente (línea ${line}).`;
       }
     }
   }
-  return stack.length === 0 ? { ok: true } : { ok: false, msg: "Faltan cierres de paréntesis o corchetes." };
+  if (stack.length > 0) {
+    const unclosed = stack[stack.length - 1];
+    return `Falta cerrar "${unclosed.ch}" abierto en la línea ${unclosed.line}.`;
+  }
+  return null;
+}
+
+function checkQuotes(text) {
+  const errors = [];
+  text.split("\n").forEach((line, idx) => {
+    const quotes = (line.match(/"/g) || []).length;
+    if (quotes % 2 !== 0) {
+      errors.push(`Comillas dobles sin cerrar en la línea ${idx + 1}.`);
+    }
+  });
+  return errors;
+}
+
+function countMatches(text, regex) {
+  return (text.match(regex) || []).length;
+}
+
+function checkKeywordPairs(text) {
+  const errors = [];
+  const ifC = countMatches(text, /\bif\b/g);
+  const thenC = countMatches(text, /\bthen\b/g);
+  const elseC = countMatches(text, /\belse\b/g);
+  if (ifC !== thenC || thenC !== elseC) {
+    errors.push('Las palabras "if", "then" y "else" no están balanceadas: revisa que cada "if" tenga su "then" y su "else".');
+  }
+
+  const letC = countMatches(text, /\blet\b/g);
+  const inC = countMatches(text, /\bin\b/g);
+  if (letC !== inC) {
+    errors.push('Cada "let" debe tener su "in" correspondiente: revisa el balance en tu código.');
+  }
+
+  const caseC = countMatches(text, /\bcase\b/g);
+  const ofC = countMatches(text, /\bof\b/g);
+  if (caseC !== ofC) {
+    errors.push('Cada "case" debe tener su "of" correspondiente: revisa el balance en tu código.');
+  }
+
+  return errors;
+}
+
+function checkLineSemantics(text) {
+  const errors = [];
+
+  text.split("\n").forEach((raw, idx) => {
+    const line = raw.trim();
+    const n = idx + 1;
+    if (!line || line.startsWith("--")) return;
+
+    if (/::\s*$/.test(line)) {
+      errors.push(`Falta indicar el tipo después de "::" en la línea ${n}.`);
+    }
+
+    if (/(?<!=)=\s*$/.test(line)) {
+      errors.push(`Falta una expresión después del "=" en la línea ${n}.`);
+    }
+
+    if (/^\|/.test(line) && !/=/.test(line)) {
+      errors.push(`Falta "=" en la guarda de la línea ${n}.`);
+    }
+
+    if (/\\\s*\w+/.test(line) && !/->/.test(line)) {
+      errors.push(`Falta "->" en la función anónima (lambda) de la línea ${n}.`);
+    }
+
+    if (/,\s*\]/.test(line)) {
+      errors.push(`Hay una coma sobrante antes de "]" en la línea ${n}.`);
+    }
+
+    if (/=>/.test(line) && !/::/.test(line)) {
+      errors.push(`Se encontró "=>" fuera de una restricción de clase de tipos; probablemente quisiste usar "->" en la línea ${n}.`);
+    }
+
+    if (/[+\-*/%<>]\s*$/.test(line)) {
+      errors.push(`La línea ${n} termina con un operador incompleto ("${line.slice(-1)}").`);
+    }
+  });
+
+  return errors;
+}
+
+function checkSyntax(text) {
+  const errors = [];
+
+  const bracketError = checkBrackets(text);
+  if (bracketError) errors.push(bracketError);
+
+  errors.push(...checkQuotes(text));
+  errors.push(...checkKeywordPairs(text));
+  errors.push(...checkLineSemantics(text));
+
+  return { ok: errors.length === 0, errors };
 }
 
 function generateFullSteps(code) {
@@ -318,8 +424,13 @@ function Home({ isAuthenticated, onSaveCorrect, onAttempt, exercise, onBack }) {
     const syntax = checkSyntax(code);
     if (!syntax.ok) {
       setHasError(true);
-      setFullSteps([{ lineNumber: null, fragments: [`Error detectado: ${syntax.msg}`] }]);
-      setVisibleCount(1);
+      setFullSteps(
+        syntax.errors.map((msg, idx) => ({
+          lineNumber: null,
+          fragments: [`Error ${idx + 1}: ${msg}`],
+        }))
+      );
+      setVisibleCount(syntax.errors.length);
       setCanSave(true);
       onAttempt?.();
       return;
@@ -459,26 +570,24 @@ function Home({ isAuthenticated, onSaveCorrect, onAttempt, exercise, onBack }) {
           <p className="editor-hint">Pasa el mouse por una línea para mostrar su botón de explicación individual.</p>
 
           <div className="editor-actions">
-  <button
-    type="button"
-    className="btn btn-clear"
-    onClick={() => setShowClearModal(true)}
-    disabled={!code.trim() || isExplaining || isLineExplaining}
-  >
-    Limpiar editor
-  </button>
+            <button
+              type="button"
+              className="btn btn-clear"
+              onClick={() => setShowClearModal(true)}
+              disabled={!code.trim() || isExplaining || isLineExplaining}
+            >
+              Limpiar editor
+            </button>
 
-  <button
-    type="button"
-    className="btn btn-primary"
-    onClick={handleExplainFunction}
-    disabled={isExplaining || isLineExplaining}
-  >
-    {isExplaining ? "Analizando código..." : "Explicar función"}
-  </button>
-</div>
-
-
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={handleExplainFunction}
+              disabled={isExplaining || isLineExplaining}
+            >
+              {isExplaining ? "Analizando código..." : "Explicar función"}
+            </button>
+          </div>
         </div>
 
         {/* Columna derecha: Explicación */}
@@ -537,53 +646,53 @@ function Home({ isAuthenticated, onSaveCorrect, onAttempt, exercise, onBack }) {
 
       {/* ===== Modales ===== */}
 
-      
-{showClearModal && (
-  <div
-    className="modal-backdrop"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="clear-editor-title"
-  >
-    <div className="modal">
-      <button
-        type="button"
-        className="modal-close"
-        aria-label="Cerrar"
-        onClick={() => setShowClearModal(false)}
-      >
-        ×
-      </button>
-
-      <div className="modal-icon modal-icon-warning">!</div>
-
-      <h3 id="clear-editor-title">¿Deseas limpiar el editor?</h3>
-
-      <p>
-        Se eliminará todo el código escrito y la explicación generada.
-        Esta acción no se puede deshacer.
-      </p>
-
-      <div className="modal-actions split">
-        <button
-          type="button"
-          className="btn btn-secondary"
-          onClick={() => setShowClearModal(false)}
+      {showClearModal && (
+        <div
+          className="modal-backdrop"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="clear-editor-title"
         >
-          Cancelar
-        </button>
+          <div className="modal">
+            <button
+              type="button"
+              className="modal-close"
+              aria-label="Cerrar"
+              onClick={() => setShowClearModal(false)}
+            >
+              ×
+            </button>
 
-        <button
-          type="button"
-          className="btn btn-danger"
-          onClick={handleClearEditor}
-        >
-          Limpiar código
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+            <div className="modal-icon modal-icon-warning">!</div>
+
+            <h3 id="clear-editor-title">¿Deseas limpiar el editor?</h3>
+
+            <p>
+              Se eliminará todo el código escrito y la explicación generada.
+              Esta acción no se puede deshacer.
+            </p>
+
+            <div className="modal-actions split">
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => setShowClearModal(false)}
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="button"
+                className="btn btn-danger"
+                onClick={handleClearEditor}
+              >
+                Limpiar código
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showAuthModal && (
         <div className="modal-backdrop" role="dialog" aria-modal="true">
           <div className="modal">
