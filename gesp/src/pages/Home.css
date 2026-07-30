@@ -184,7 +184,14 @@
   color: var(--text-secondary);
   margin: 10px 0 0;
 }
-.editor-actions { margin-top: 14px; }
+/*.editor-actions { margin-top: 14px; }*/
+
+.editor-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 14px;
+}
 
 /* ---- Explicación ---- */
 .explanation-header {
@@ -278,6 +285,7 @@
 }
 
 /* ---- Modales ---- */
+
 .modal-backdrop {
   position: fixed;
   inset: 0;
@@ -326,4 +334,39 @@
 
 @media (max-width: 720px) {
   .home-container { grid-template-columns: 1fr; }
+}
+
+/*modal borrar lo escrito en editor*/
+
+.btn-clear {
+  background: #ffffff;
+  border: 1px solid #9ca3af;
+  color: var(--navy);
+}
+
+.btn-clear:hover:not(:disabled) {
+  background: #f3f4f6;
+}
+
+.btn-clear:disabled {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.btn-danger {
+  background: #dc2626;
+  border: 1px solid #dc2626;
+  color: #ffffff;
+}
+
+.btn-danger:hover {
+  background: #b91c1c;
+  border-color: #b91c1c;
+}
+
+.modal-icon-warning {
+  background: #fef3c7;
+  color: #92400e;
 }
