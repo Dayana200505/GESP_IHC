@@ -419,6 +419,7 @@ function Home({ isAuthenticated, onSaveCorrect, onAttempt, exercise, onBack }) {
   const [showDraftModal, setShowDraftModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showClearModal, setShowClearModal] = useState(false);
+  const [copiedExplanation, setCopiedExplanation] = useState(false);
 
   const intervalRef = useRef();
   const lineTimeoutRef = useRef();
@@ -433,12 +434,22 @@ function Home({ isAuthenticated, onSaveCorrect, onAttempt, exercise, onBack }) {
 
   const lines = code.split("\n");
 
+
   // Progreso (0-100) del análisis completo, usado por la barra de carga.
   const totalFullSteps = fullSteps.length;
   const progressPercent =
     mode === "full" && totalFullSteps > 0
       ? Math.min(100, Math.round((visibleCount / totalFullSteps) * 100))
       : 0;
+
+  const hasExplanationToCopy =
+  (mode === "line" &&
+    !isLineExplaining &&
+    lineFragments.length > 0) ||
+  (mode === "full" &&
+    fullSteps.length > 0 &&
+    visibleCount > 0);
+
 
   function resetExplanationState() {
     clearInterval(intervalRef.current);
@@ -595,6 +606,44 @@ function Home({ isAuthenticated, onSaveCorrect, onAttempt, exercise, onBack }) {
     setShowClearModal(false);
   }
 
+  async function handleCopyExplanation() {
+    let explanationText = "";
+  
+    if (mode === "line") {
+      explanationText = lineFragments.join("\n");
+    }
+  
+    if (mode === "full") {
+      explanationText = fullSteps
+        .slice(0, visibleCount)
+        .flatMap((step) => {
+          const lineTitle = step.lineNumber
+            ? [`Línea ${step.lineNumber}`]
+            : [];
+  
+          return [...lineTitle, ...step.fragments];
+        })
+        .join("\n");
+    }
+  
+    if (!explanationText.trim()) {
+      return;
+    }
+  
+    try {
+      await navigator.clipboard.writeText(explanationText);
+  
+      setCopiedExplanation(true);
+  
+      setTimeout(() => {
+        setCopiedExplanation(false);
+      }, 2000);
+    } catch (error) {
+      console.error("No se pudo copiar la explicación:", error);
+    }
+  }
+
+
   return (
     <div className="home-page">
       {/* Estilos locales de la barra de progreso (más notoria que el spinner anterior) */}
@@ -734,18 +783,45 @@ function Home({ isAuthenticated, onSaveCorrect, onAttempt, exercise, onBack }) {
         </div>
 
         {/* Columna derecha: Explicación */}
-        <div className="card explanation-card">
-          <div className="explanation-header">
-            <div>
-              <h2>Explicación guiada</h2>
-              <p className="mode-label">
-                {mode === "line" && "Modo: Línea individual"}
-                {mode === "full" && "Modo: Explicación completa"}
-                {mode === "idle" && "Selecciona una línea o solicita una explicación completa del código."}
-              </p>
-            </div>
-            {mode === "line" && selectedLine && <span className="line-badge">Línea [{selectedLine}]</span>}
-          </div>
+        <div className="card explanation-card" translate="no">
+  <div className="explanation-header">
+    <div>
+      <h2>Explicación guiada</h2>
+
+      <p className="mode-label" translate="no">
+        <span>
+          {mode === "line"
+            ? "Modo: Línea individual"
+            : mode === "full"
+              ? "Modo: Explicación completa"
+              : "Selecciona una línea o solicita una explicación completa del código."}
+        </span>
+      </p>
+    </div>
+
+    <div className="explanation-header-actions">
+      {mode === "line" && selectedLine && (
+        <span className="line-badge">
+          Línea [{selectedLine}]
+        </span>
+      )}
+
+      <button
+        type="button"
+        className={`copy-explanation-btn ${
+          copiedExplanation ? "copied" : ""
+        }`}
+        onClick={handleCopyExplanation}
+        disabled={!hasExplanationToCopy}
+        title="Copiar explicación"
+        translate="no"
+      >
+        <span>
+          {copiedExplanation ? "✓ ¡Copiado!" : "⧉ Copiar"}
+        </span>
+      </button>
+    </div>
+  </div>
 
           <div className="explanation-body">
             {/* Barra de progreso notoria: solo para el modo "explicación completa" */}

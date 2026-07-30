@@ -377,3 +377,44 @@
   background: #fef3c7;
   color: #92400e;
 }
+
+/*Boton de copiar*/
+
+.explanation-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.copy-explanation-btn {
+  padding: 8px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--navy);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.copy-explanation-btn:hover:not(:disabled) {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+}
+
+.copy-explanation-btn:disabled {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+.copy-explanation-btn.copied {
+  background: #ecfdf5;
+  border-color: #86efac;
+  color: #166534;
+}
