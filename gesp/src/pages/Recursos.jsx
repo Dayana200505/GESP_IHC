@@ -96,6 +96,7 @@ function Recursos() {
   const [isDragging, setIsDragging] = useState(false);
 
   const fileInputRef = useRef(null);
+  const searchInputRef = useRef(null);
 
   function handleDrop(e) {
     e.preventDefault();
@@ -198,8 +199,19 @@ function Recursos() {
     setCategory("");
     setLevel("");
     setErrors({});
+    setSearch(title.trim() || (file ? file.name : ""));
+    setFilterType(mode === "PDF" ? "PDF" : "LINK");
+    setFilterLevel("");
     setShowConfirm(false);
     setShowSuccess(true);
+
+    window.setTimeout(() => {
+      document.getElementById("community-resources")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+      searchInputRef.current?.focus();
+    }, 120);
   }
 
   function handleSaveDraft() {
@@ -400,11 +412,12 @@ function Recursos() {
         </div>
 
         {/* ===== Columna derecha: recursos de la comunidad ===== */}
-        <div className="card recursos-right">
+        <div id="community-resources" className="card recursos-right">
           <div className="resources-header">
             <h3>Recursos de la comunidad</h3>
             <div className="search-group">
               <input
+                ref={searchInputRef}
                 placeholder="Buscar recurso..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}

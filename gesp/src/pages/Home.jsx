@@ -345,6 +345,8 @@ function Home({ isAuthenticated, onSaveCorrect, onAttempt, exercise, onBack }) {
 
   const [hasError, setHasError] = useState(false);
   const [canSave, setCanSave] = useState(false);
+  const [explanationStatus, setExplanationStatus] = useState("idle");
+  const [saveState, setSaveState] = useState("idle");
 
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showSaveErrorModal, setShowSaveErrorModal] = useState(false);
@@ -365,6 +367,13 @@ function Home({ isAuthenticated, onSaveCorrect, onAttempt, exercise, onBack }) {
 
   const lines = code.split("\n");
 
+  // Progreso (0-100) del análisis completo, usado por la barra de carga.
+  const totalFullSteps = fullSteps.length;
+  const progressPercent =
+    mode === "full" && totalFullSteps > 0
+      ? Math.min(100, Math.round((visibleCount / totalFullSteps) * 100))
+      : 0;
+
   function resetExplanationState() {
     clearInterval(intervalRef.current);
     clearTimeout(lineTimeoutRef.current);
@@ -378,6 +387,8 @@ function Home({ isAuthenticated, onSaveCorrect, onAttempt, exercise, onBack }) {
     setIsLineExplaining(false);
     setCanSave(false);
     setHasError(false);
+    setExplanationStatus("idle");
+    setSaveState("idle");
   }
 
   function handleCodeChange(event) {
@@ -397,16 +408,15 @@ function Home({ isAuthenticated, onSaveCorrect, onAttempt, exercise, onBack }) {
     setIsExplaining(false);
     setIsLineExplaining(true);
     setCanSave(false);
+    setExplanationStatus("loading");
 
     lineTimeoutRef.current = setTimeout(() => {
       setLineFragments(explainLine(text));
       setPendingLine(null);
       setIsLineExplaining(false);
       setCanSave(true);
+      setExplanationStatus("ready");
     }, 520);
-    if (text.trim().length > 0) {
-      setCanSave(true);
-    }
   }
 
   function handleExplainFunction() {
@@ -420,6 +430,20 @@ function Home({ isAuthenticated, onSaveCorrect, onAttempt, exercise, onBack }) {
     setVisibleCount(0);
     setIsLineExplaining(false);
     setLineFragments([]);
+    setExplanationStatus("loading");
+
+    if (!code.trim()) {
+      setFullSteps([
+        {
+          lineNumber: null,
+          fragments: ["Escribe código y pulsa 'Explicar función' para obtener una guía paso a paso."],
+        },
+      ]);
+      setVisibleCount(1);
+      setExplanationStatus("empty");
+      setCanSave(true);
+      return;
+    }
 
     const syntax = checkSyntax(code);
     if (!syntax.ok) {
@@ -432,6 +456,7 @@ function Home({ isAuthenticated, onSaveCorrect, onAttempt, exercise, onBack }) {
       );
       setVisibleCount(syntax.errors.length);
       setCanSave(true);
+      setExplanationStatus("error");
       onAttempt?.();
       return;
     }
@@ -455,6 +480,7 @@ function Home({ isAuthenticated, onSaveCorrect, onAttempt, exercise, onBack }) {
         clearInterval(intervalRef.current);
         setIsExplaining(false);
         setCanSave(true);
+        setExplanationStatus("ready");
         onAttempt?.();
       }
     }, 450);
@@ -469,6 +495,7 @@ function Home({ isAuthenticated, onSaveCorrect, onAttempt, exercise, onBack }) {
       setShowAuthModal(true);
       return;
     }
+    setSaveState("saved");
     setShowSuccessModal(true);
     onSaveCorrect?.();
   }
@@ -476,6 +503,7 @@ function Home({ isAuthenticated, onSaveCorrect, onAttempt, exercise, onBack }) {
   function handleSaveDraft() {
     setShowSaveErrorModal(false);
     setShowDraftModal(true);
+    setSaveState("draft");
   }
 
   function handleClearEditor() {
@@ -486,6 +514,34 @@ function Home({ isAuthenticated, onSaveCorrect, onAttempt, exercise, onBack }) {
 
   return (
     <div className="home-page">
+      {/* Estilos locales de la barra de progreso (más notoria que el spinner anterior) */}
+<style>{`
+  .gesp-loading-panel {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--card-bg, #f4f6ff);
+    border: 1px solid var(--border-color, #d8ddf2);
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    font-weight: 500;
+    color: var(--primary-color, #4b5bdc);
+  }
+  .gesp-dot-spinner {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 2px solid rgba(75, 91, 220, 0.2);
+    border-top-color: var(--primary-color, #4b5bdc);
+    animation: gesp-spin 0.7s linear infinite;
+    flex-shrink: 0;
+  }
+  @keyframes gesp-spin {
+    to { transform: rotate(360deg); }
+  }
+`}</style>
+
       {exercise && (
         <div className="home-topbar">
           <button type="button" className="back-link" onClick={onBack}>
@@ -585,7 +641,7 @@ function Home({ isAuthenticated, onSaveCorrect, onAttempt, exercise, onBack }) {
               onClick={handleExplainFunction}
               disabled={isExplaining || isLineExplaining}
             >
-              {isExplaining ? "Analizando código..." : "Explicar función"}
+              {isExplaining || isLineExplaining ? "Analizando..." : "Explicar función"}
             </button>
           </div>
         </div>
@@ -605,25 +661,44 @@ function Home({ isAuthenticated, onSaveCorrect, onAttempt, exercise, onBack }) {
           </div>
 
           <div className="explanation-body">
-            {mode === "idle" && (
-              <div className="help-text">Pasa el mouse sobre una línea y presiona Explicar, o genera la explicación completa de la función.</div>
+            {/* Barra de progreso notoria: solo para el modo "explicación completa" */}
+{explanationStatus === "loading" && (
+  <div className="gesp-loading-panel">
+    <span className="gesp-dot-spinner" aria-hidden="true" />
+    <span>
+      {mode === "full" ? "Generando explicación..." : "Generando la explicación solicitada..."}
+    </span>
+  </div>
+)}
+
+            {/* Loading para explicación de línea individual */}
+            {explanationStatus === "loading" && mode === "line" && (
+              <div className="gesp-line-loading-panel">
+                <span className="gesp-progress-spinner" aria-hidden="true" />
+                <span>Generando la explicación solicitada...</span>
+              </div>
             )}
 
-            {mode === "line" &&
-              (isLineExplaining ? (
-                <div className="line-loading-panel">
-                  <span className="spinner" aria-hidden="true" />
-                  <span>Generando la explicación de la línea seleccionada...</span>
+            {explanationStatus === "empty" && (
+              <div className="help-text">
+                Escribe código y pulsa "Explicar función" para obtener una guía paso a paso.
+              </div>
+            )}
+
+            {explanationStatus === "idle" && (
+              <div className="help-text">
+                Selecciona una línea o solicita una explicación completa del código.
+              </div>
+            )}
+
+            {mode === "line" && explanationStatus === "ready" &&
+              lineFragments.map((frag, i) => (
+                <div key={i} className="ex-step">
+                  {frag}
                 </div>
-              ) : (
-                lineFragments.map((frag, i) => (
-                  <div key={i} className="ex-step">
-                    {frag}
-                  </div>
-                ))
               ))}
 
-            {mode === "full" &&
+            {(mode === "full" || explanationStatus === "error") &&
               fullSteps.slice(0, visibleCount).map((step, i) => (
                 <div key={i} className={`ex-block ${hasError ? "error" : ""}`}>
                   {step.lineNumber && <span className="ex-line-tag">Línea {step.lineNumber}</span>}
@@ -638,7 +713,7 @@ function Home({ isAuthenticated, onSaveCorrect, onAttempt, exercise, onBack }) {
 
           <div className="action-row">
             <button className="btn btn-save" disabled={!canSave} onClick={handleSave}>
-              Guardar progreso
+              {saveState === "saved" ? "Guardado" : saveState === "draft" ? "Borrador" : "Guardar progreso"}
             </button>
           </div>
         </div>
