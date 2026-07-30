@@ -250,7 +250,12 @@ function Recursos() {
             </div>
           )}
 
-          <label className="field-label">Título del recurso</label>
+          <label className="field-label">
+            <span className="field-label-text">
+              Título del recurso
+              <span className="required-mark" aria-hidden="true">*</span>
+            </span>
+          </label>
           <input
             className="text-input"
             placeholder="Ej.: Guía de recursividad en Haskell"
@@ -260,7 +265,12 @@ function Recursos() {
 
           <div className="row">
             <div className="col">
-              <label className="field-label">Categoría</label>
+              <label className="field-label">
+                <span className="field-label-text">
+                  Categoría
+                  <span className="required-mark" aria-hidden="true">*</span>
+                </span>
+              </label>
               <select value={category} onChange={(e) => setCategory(e.target.value)}>
                 <option value="">Selecciona</option>
                 {THEME_OPTIONS.map((option) => (
@@ -271,7 +281,12 @@ function Recursos() {
               </select>
             </div>
             <div className="col">
-              <label className="field-label">Nivel recomendado</label>
+              <label className="field-label">
+                <span className="field-label-text">
+                  Nivel recomendado
+                  <span className="required-mark" aria-hidden="true">*</span>
+                </span>
+              </label>
               <select value={level} onChange={(e) => setLevel(e.target.value)}>
                 <option value="">Selecciona</option>
                 {LEVEL_OPTIONS.map((option) => (
