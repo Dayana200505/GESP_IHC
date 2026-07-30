@@ -414,3 +414,29 @@
     padding: 32px 24px;
   }
 }
+.code-input-group {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: space-between;
+}
+
+.code-digit-input {
+  width: 100%;
+  aspect-ratio: 1;
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: 600;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.code-digit-input:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+.field-invalid .code-digit-input {
+  border-color: #ef4444;
+}
