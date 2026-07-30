@@ -418,3 +418,27 @@
   border-color: #86efac;
   color: #166534;
 }
+
+.explanation-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.explanation-header > div:first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.explanation-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.copy-explanation-btn {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
