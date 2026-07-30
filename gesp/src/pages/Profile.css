@@ -1,10 +1,10 @@
 body {
-  background: #f2f2f3;
+  background: #f0fdf4;
   margin: 0;
 }
 
 .profile-page {
-  background: #eafaf0;
+  background: #f0fdf4;
   min-height: 100vh;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   color: #1c1c1e;
@@ -12,7 +12,9 @@ body {
 
 /* ---------- Content wrapper ---------- */
 .profile-content {
-  padding: 32px 40px;
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 24px 32px 60px;
   border-radius: 24px;
 }
 
