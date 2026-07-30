@@ -96,6 +96,7 @@
 }
 .line-number:hover { color: #94A3B8; }
 .line-number.active { color: var(--green); font-weight: 700; }
+.line-number.error { color: #ef4444; font-weight: 700; }
 .line-number:disabled { cursor: default; opacity: 0.75; }
 
 .line-action-btn {
@@ -164,6 +165,10 @@
   height: var(--line-height);
   background: rgba(34, 197, 94, 0.14);
   pointer-events: none;
+}
+.line-highlight.error {
+  background: rgba(239, 68, 68, 0.16);
+  border-left: 3px solid #ef4444;
 }
 .code-area {
   position: relative;

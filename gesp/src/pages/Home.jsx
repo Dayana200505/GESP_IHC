@@ -201,13 +201,23 @@ function checkBrackets(text) {
     if (closers.includes(ch)) {
       const last = stack.pop();
       if (!last || last.ch !== pairs[ch]) {
-        return `Símbolo "${ch}" sin su apertura correspondiente (línea ${line}).`;
+        return {
+          line,
+          kind: "bracket",
+          message: `Símbolo "${ch}" sin su apertura correspondiente.`,
+          suggestion: "Revisa el orden de apertura y cierre de paréntesis, corchetes o llaves y agrega el símbolo que falta.",
+        };
       }
     }
   }
   if (stack.length > 0) {
     const unclosed = stack[stack.length - 1];
-    return `Falta cerrar "${unclosed.ch}" abierto en la línea ${unclosed.line}.`;
+    return {
+      line: unclosed.line,
+      kind: "bracket",
+      message: `Falta cerrar "${unclosed.ch}" abierto en esta línea.`,
+      suggestion: "Cierra el símbolo que abriste para que el bloque quede bien definido.",
+    };
   }
   return null;
 }
@@ -217,7 +227,12 @@ function checkQuotes(text) {
   text.split("\n").forEach((line, idx) => {
     const quotes = (line.match(/"/g) || []).length;
     if (quotes % 2 !== 0) {
-      errors.push(`Comillas dobles sin cerrar en la línea ${idx + 1}.`);
+      errors.push({
+        line: idx + 1,
+        kind: "quotes",
+        message: "Hay comillas dobles sin cerrar en esta línea.",
+        suggestion: "Agrega la comilla faltante al final de la cadena o corrige el texto que intentas escribir.",
+      });
     }
   });
   return errors;
@@ -233,19 +248,34 @@ function checkKeywordPairs(text) {
   const thenC = countMatches(text, /\bthen\b/g);
   const elseC = countMatches(text, /\belse\b/g);
   if (ifC !== thenC || thenC !== elseC) {
-    errors.push('Las palabras "if", "then" y "else" no están balanceadas: revisa que cada "if" tenga su "then" y su "else".');
+    errors.push({
+      line: 1,
+      kind: "keywords",
+      message: 'Las palabras "if", "then" y "else" no están balanceadas.',
+      suggestion: 'Revisa que cada condición tenga su parte verdadera y falsa correctamente definida.',
+    });
   }
 
   const letC = countMatches(text, /\blet\b/g);
   const inC = countMatches(text, /\bin\b/g);
   if (letC !== inC) {
-    errors.push('Cada "let" debe tener su "in" correspondiente: revisa el balance en tu código.');
+    errors.push({
+      line: 1,
+      kind: "keywords",
+      message: 'Cada "let" debe tener su "in" correspondiente.',
+      suggestion: 'Cierra la expresión auxiliar con la palabra clave "in" cuando ya no la necesites en el contexto actual.',
+    });
   }
 
   const caseC = countMatches(text, /\bcase\b/g);
   const ofC = countMatches(text, /\bof\b/g);
   if (caseC !== ofC) {
-    errors.push('Cada "case" debe tener su "of" correspondiente: revisa el balance en tu código.');
+    errors.push({
+      line: 1,
+      kind: "keywords",
+      message: 'Cada "case" debe tener su "of" correspondiente.',
+      suggestion: 'Completa la estructura de selección agregando la parte correspondiente a "of".',
+    });
   }
 
   return errors;
@@ -260,31 +290,66 @@ function checkLineSemantics(text) {
     if (!line || line.startsWith("--")) return;
 
     if (/::\s*$/.test(line)) {
-      errors.push(`Falta indicar el tipo después de "::" en la línea ${n}.`);
+      errors.push({
+        line: n,
+        kind: "type",
+        message: 'Falta indicar el tipo después de "::".',
+        suggestion: 'Escribe el tipo que debe devolver la función, por ejemplo: "sumList :: [Int] -> Int".',
+      });
     }
 
     if (/(?<!=)=\s*$/.test(line)) {
-      errors.push(`Falta una expresión después del "=" en la línea ${n}.`);
+      errors.push({
+        line: n,
+        kind: "expression",
+        message: 'Falta una expresión después del "=".',
+        suggestion: 'Añade el valor o la operación que debe devolver esa línea.',
+      });
     }
 
     if (/^\|/.test(line) && !/=/.test(line)) {
-      errors.push(`Falta "=" en la guarda de la línea ${n}.`);
+      errors.push({
+        line: n,
+        kind: "guard",
+        message: 'Falta "=" en la guarda de la línea.',
+        suggestion: 'Completa la guarda con una expresión como "| x > 0 = ...".',
+      });
     }
 
     if (/\\\s*\w+/.test(line) && !/->/.test(line)) {
-      errors.push(`Falta "->" en la función anónima (lambda) de la línea ${n}.`);
+      errors.push({
+        line: n,
+        kind: "lambda",
+        message: 'Falta "->" en la función anónima.',
+        suggestion: 'Usa una forma como "\\x -> x + 1" para definir bien la función lambda.',
+      });
     }
 
     if (/,\s*\]/.test(line)) {
-      errors.push(`Hay una coma sobrante antes de "]" en la línea ${n}.`);
+      errors.push({
+        line: n,
+        kind: "syntax",
+        message: 'Hay una coma sobrante antes de "]".',
+        suggestion: 'Elimina la coma extra para dejar la lista correctamente escrita.',
+      });
     }
 
     if (/=>/.test(line) && !/::/.test(line)) {
-      errors.push(`Se encontró "=>" fuera de una restricción de clase de tipos; probablemente quisiste usar "->" en la línea ${n}.`);
+      errors.push({
+        line: n,
+        kind: "syntax",
+        message: 'Se encontró "=>" fuera de una restricción de tipo.',
+        suggestion: 'Probablemente quisiste usar "->" en esa expresión.',
+      });
     }
 
     if (/[+\-*/%<>]\s*$/.test(line)) {
-      errors.push(`La línea ${n} termina con un operador incompleto ("${line.slice(-1)}").`);
+      errors.push({
+        line: n,
+        kind: "operator",
+        message: 'La línea termina con un operador incompleto.',
+        suggestion: 'Completa la operación agregando el valor o la expresión que sigue al operador.',
+      });
     }
   });
 
@@ -347,6 +412,7 @@ function Home({ isAuthenticated, onSaveCorrect, onAttempt, exercise, onBack }) {
   const [canSave, setCanSave] = useState(false);
   const [explanationStatus, setExplanationStatus] = useState("idle");
   const [saveState, setSaveState] = useState("idle");
+  const [syntaxErrors, setSyntaxErrors] = useState([]);
 
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showSaveErrorModal, setShowSaveErrorModal] = useState(false);
@@ -389,6 +455,7 @@ function Home({ isAuthenticated, onSaveCorrect, onAttempt, exercise, onBack }) {
     setHasError(false);
     setExplanationStatus("idle");
     setSaveState("idle");
+    setSyntaxErrors([]);
   }
 
   function handleCodeChange(event) {
@@ -401,6 +468,8 @@ function Home({ isAuthenticated, onSaveCorrect, onAttempt, exercise, onBack }) {
     clearTimeout(lineTimeoutRef.current);
 
     const text = lines[lineNumber - 1] ?? "";
+    const activeError = syntaxErrors.find((item) => item.line === lineNumber);
+
     setMode("line");
     setSelectedLine(lineNumber);
     setPendingLine(lineNumber);
@@ -411,11 +480,21 @@ function Home({ isAuthenticated, onSaveCorrect, onAttempt, exercise, onBack }) {
     setExplanationStatus("loading");
 
     lineTimeoutRef.current = setTimeout(() => {
-      setLineFragments(explainLine(text));
       setPendingLine(null);
       setIsLineExplaining(false);
       setCanSave(true);
       setExplanationStatus("ready");
+      if (activeError) {
+        setLineFragments([
+          `La línea ${lineNumber} presenta un problema: ${activeError.message}`,
+          `Sugerencia: ${activeError.suggestion}`,
+          `Código actual: "${text}"`,
+        ]);
+        setHasError(true);
+      } else {
+        setLineFragments(explainLine(text));
+        setHasError(false);
+      }
     }, 520);
   }
 
@@ -446,12 +525,16 @@ function Home({ isAuthenticated, onSaveCorrect, onAttempt, exercise, onBack }) {
     }
 
     const syntax = checkSyntax(code);
+    setSyntaxErrors(syntax.errors);
     if (!syntax.ok) {
       setHasError(true);
       setFullSteps(
-        syntax.errors.map((msg, idx) => ({
-          lineNumber: null,
-          fragments: [`Error ${idx + 1}: ${msg}`],
+        syntax.errors.map((error) => ({
+          lineNumber: error.line,
+          fragments: [
+            `Error en la línea ${error.line}: ${error.message}`,
+            `Solución: ${error.suggestion}`,
+          ],
         }))
       );
       setVisibleCount(syntax.errors.length);
@@ -569,6 +652,7 @@ function Home({ isAuthenticated, onSaveCorrect, onAttempt, exercise, onBack }) {
                 const lineNumber = idx + 1;
                 const isSelected = selectedLine === lineNumber;
                 const isLoadingLine = isLineExplaining && pendingLine === lineNumber;
+                const hasLineError = syntaxErrors.some((item) => item.line === lineNumber);
 
                 return (
                   <div
@@ -577,7 +661,7 @@ function Home({ isAuthenticated, onSaveCorrect, onAttempt, exercise, onBack }) {
                   >
                     <button
                       type="button"
-                      className={`line-number ${isSelected ? "active" : ""}`}
+                      className={`line-number ${isSelected ? "active" : ""} ${hasLineError ? "error" : ""}`}
                       onClick={() => handleLineClick(lineNumber)}
                       title={`Explicar línea ${lineNumber}`}
                       disabled={isExplaining || isLineExplaining}
@@ -611,7 +695,10 @@ function Home({ isAuthenticated, onSaveCorrect, onAttempt, exercise, onBack }) {
 
             <div className="code-area-wrapper">
               {selectedLine && (
-                <div className="line-highlight" style={{ top: `${(selectedLine - 1) * LINE_HEIGHT + CODE_EDITOR_PADDING_TOP}px` }} />
+                <div
+                  className={`line-highlight ${syntaxErrors.some((item) => item.line === selectedLine) ? "error" : ""}`}
+                  style={{ top: `${(selectedLine - 1) * LINE_HEIGHT + CODE_EDITOR_PADDING_TOP}px` }}
+                />
               )}
               <textarea
                 className="code-area"
@@ -654,7 +741,7 @@ function Home({ isAuthenticated, onSaveCorrect, onAttempt, exercise, onBack }) {
               <p className="mode-label">
                 {mode === "line" && "Modo: Línea individual"}
                 {mode === "full" && "Modo: Explicación completa"}
-                {mode === "idle" && "Selecciona una línea o explica toda la función"}
+                {mode === "idle" && "Selecciona una línea o solicita una explicación completa del código."}
               </p>
             </div>
             {mode === "line" && selectedLine && <span className="line-badge">Línea [{selectedLine}]</span>}
@@ -685,15 +772,11 @@ function Home({ isAuthenticated, onSaveCorrect, onAttempt, exercise, onBack }) {
               </div>
             )}
 
-            {explanationStatus === "idle" && (
-              <div className="help-text">
-                Selecciona una línea o solicita una explicación completa del código.
-              </div>
-            )}
+        
 
             {mode === "line" && explanationStatus === "ready" &&
               lineFragments.map((frag, i) => (
-                <div key={i} className="ex-step">
+                <div key={i} className={`ex-step ${hasError ? "error" : ""}`}>
                   {frag}
                 </div>
               ))}
