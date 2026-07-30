@@ -6,10 +6,14 @@ body {
 .profile-page {
   background: #eafaf0;
   min-height: 100vh;
-  padding: 32px 40px;
-  border-radius: 24px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   color: #1c1c1e;
+}
+
+/* ---------- Content wrapper ---------- */
+.profile-content {
+  padding: 32px 40px;
+  border-radius: 24px;
 }
 
 /* ---------- Header ---------- */
@@ -18,6 +22,7 @@ body {
   align-items: flex-start;
   justify-content: space-between;
   margin-bottom: 24px;
+  gap: 16px;
 }
 
 .page-header h1 {
@@ -44,6 +49,7 @@ body {
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .logout-icon {
@@ -198,7 +204,13 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
   padding: 12px 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.activity-row:last-child {
+  border-bottom: none;
 }
 
 .act-name {
@@ -208,10 +220,16 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
+  min-width: 0;
 }
 
-.act-name::before {
-  content: '';
+.act-name span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.act-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
@@ -219,11 +237,11 @@ body {
   flex-shrink: 0;
 }
 
-.activity-row:has(.act-status.done) .act-name::before {
+.activity-row[data-state="done"] .act-dot {
   background: #16a34a;
 }
 
-.activity-row:has(.act-status.percent) .act-name::before {
+.activity-row[data-state="percent"] .act-dot {
   background: #f59e0b;
 }
 
@@ -248,4 +266,47 @@ body {
   color: #9ca3af;
   min-width: 90px;
   text-align: right;
+}
+
+/* ---------- Mobile ---------- */
+@media (max-width: 640px) {
+  .profile-content {
+    padding: 20px 16px;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .logout-btn {
+    align-self: stretch;
+    justify-content: center;
+  }
+
+  .profile-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .left-col {
+    padding: 28px 20px;
+  }
+
+  .summary-card,
+  .activity {
+    padding: 20px;
+  }
+
+  .summary-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .act-status,
+  .act-time {
+    min-width: auto;
+  }
+
+  .act-time {
+    display: none;
+  }
 }
