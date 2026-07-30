@@ -1,4 +1,5 @@
 ﻿import React, { useState } from "react";
+import { FiEye, FiEyeOff } from "react-icons/fi";
 import { useNavigate, Link } from "react-router-dom";
 import "./Register.css";
 
@@ -49,6 +50,8 @@ function validate(values) {
 function Register({ onRegisterSuccess }) {
   const [values, setValues] = useState(initialValues);
   const [errors, setErrors] = useState({});
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (event) => {
@@ -113,7 +116,10 @@ function Register({ onRegisterSuccess }) {
             <form className="register-form" onSubmit={handleSubmit} noValidate>
               <div className="form-row">
                 <label className={fieldClass("name")}>
-                  <span>Nombre completo</span>
+                  <span className="field-label-text">
+                    Nombre completo
+                    <span className="required-mark" aria-hidden="true">*</span>
+                  </span>
                   <input
                     name="name"
                     type="text"
@@ -126,7 +132,10 @@ function Register({ onRegisterSuccess }) {
                 </label>
 
                 <label className={fieldClass("email")}>
-                  <span>Correo electrónico</span>
+                  <span className="field-label-text">
+                    Correo electrónico
+                    <span className="required-mark" aria-hidden="true">*</span>
+                  </span>
                   <input
                     name="email"
                     type="email"
@@ -141,28 +150,58 @@ function Register({ onRegisterSuccess }) {
 
               <div className="form-row">
                 <label className={fieldClass("password")}>
-                  <span>Contraseña</span>
-                  <input
-                    name="password"
-                    type="password"
-                    value={values.password}
-                    onChange={handleChange}
-                    placeholder="••••••••"
-                    autoComplete="new-password"
-                  />
+                  <span className="field-label-text">
+                    Contraseña
+                    <span className="required-mark" aria-hidden="true">*</span>
+                  </span>
+                  <div className="password-input-wrap">
+                    <input
+                      name="password"
+                      type={showPassword ? "text" : "password"}
+                      value={values.password}
+                      onChange={handleChange}
+                      placeholder="••••••••"
+                      autoComplete="new-password"
+                    />
+                    <button
+                      type="button"
+                      className="password-toggle"
+                      onClick={() => setShowPassword((prev) => !prev)}
+                      aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                    >
+                      <span aria-hidden="true">
+                        {showPassword ? <FiEyeOff /> : <FiEye />}
+                      </span>
+                    </button>
+                  </div>
                   {errors.password && <small className="field-error">{errors.password}</small>}
                 </label>
 
                 <label className={fieldClass("confirmPassword")}>
-                  <span>Confirmar contraseña</span>
-                  <input
-                    name="confirmPassword"
-                    type="password"
-                    value={values.confirmPassword}
-                    onChange={handleChange}
-                    placeholder="••••••••"
-                    autoComplete="new-password"
-                  />
+                  <span className="field-label-text">
+                    Confirmar contraseña
+                    <span className="required-mark" aria-hidden="true">*</span>
+                  </span>
+                  <div className="password-input-wrap">
+                    <input
+                      name="confirmPassword"
+                      type={showConfirmPassword ? "text" : "password"}
+                      value={values.confirmPassword}
+                      onChange={handleChange}
+                      placeholder="••••••••"
+                      autoComplete="new-password"
+                    />
+                    <button
+                      type="button"
+                      className="password-toggle"
+                      onClick={() => setShowConfirmPassword((prev) => !prev)}
+                      aria-label={showConfirmPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                    >
+                      <span aria-hidden="true">
+                        {showConfirmPassword ? <FiEyeOff /> : <FiEye />}
+                      </span>
+                    </button>
+                  </div>
                   {errors.confirmPassword && (
                     <small className="field-error">{errors.confirmPassword}</small>
                   )}
@@ -170,7 +209,10 @@ function Register({ onRegisterSuccess }) {
               </div>
 
               <label className={`${fieldClass("university")} full-width`}>
-                <span>Universidad</span>
+                <span className="field-label-text">
+                  Universidad
+                  <span className="required-mark" aria-hidden="true">*</span>
+                </span>
                 <input
                   name="university"
                   type="text"
@@ -189,7 +231,10 @@ function Register({ onRegisterSuccess }) {
                     checked={values.acceptTerms}
                     onChange={handleChange}
                   />
-                  <span>Acepto los términos y la política de privacidad.</span>
+                  <span className="field-label-text">
+                    Acepto los términos y la política de privacidad.
+                    <span className="required-mark" aria-hidden="true">*</span>
+                  </span>
                 </label>
                 {errors.acceptTerms && <small className="field-error">{errors.acceptTerms}</small>}
               </div>

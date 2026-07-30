@@ -82,6 +82,7 @@ function Recursos() {
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("");
   const [level, setLevel] = useState("");
+  const [errors, setErrors] = useState({});
 
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState("ALL");
@@ -100,17 +101,76 @@ function Recursos() {
     e.preventDefault();
     setIsDragging(false);
     const dropped = e.dataTransfer.files && e.dataTransfer.files[0];
-    if (dropped) setFile(dropped);
+    if (dropped) {
+      setFile(dropped);
+      setErrors((prev) => ({ ...prev, file: "" }));
+    }
   }
-
+ 
   function handleFileChange(e) {
     const selected = e.target.files && e.target.files[0];
-    if (selected) setFile(selected);
+    if (selected) {
+      setFile(selected);
+      setErrors((prev) => ({ ...prev, file: "" }));
+    }
   }
-
+ 
+  function isValidUrl(value) {
+    try {
+      const url = new URL(value);
+      return url.protocol === "http:" || url.protocol === "https:";
+    } catch {
+      return false;
+    }
+  }
+ 
+  function validateResource() {
+    const nextErrors = {};
+ 
+    if (mode === "PDF") {
+      if (!file) {
+        nextErrors.file = "Selecciona un archivo PDF.";
+      } else if (
+        file.type !== "application/pdf" &&
+        !file.name.toLowerCase().endsWith(".pdf")
+      ) {
+        nextErrors.file = "El archivo debe ser un PDF.";
+      } else if (file.size > 10 * 1024 * 1024) {
+        nextErrors.file = "El archivo no puede exceder 10 MB.";
+      }
+    }
+ 
+    if (mode === "LINK") {
+      if (!link.trim()) {
+        nextErrors.link = "Introduce una URL.";
+      } else if (!isValidUrl(link.trim())) {
+        nextErrors.link = "Introduce una URL válida (http(s)://).";
+      }
+    }
+ 
+    if (!title.trim()) {
+      nextErrors.title = "El título del recurso es obligatorio.";
+    }
+ 
+    if (!category) {
+      nextErrors.category = "Selecciona una categoría.";
+    }
+ 
+    if (!level) {
+      nextErrors.level = "Selecciona un nivel recomendado.";
+    }
+ 
+    return nextErrors;
+  }
+ 
   function handlePublish() {
-    if (mode === "PDF" && !file) return alert("Selecciona un archivo PDF");
-    if (mode === "LINK" && !link.trim()) return alert("Introduce una URL");
+    const validationErrors = validateResource();
+    setErrors(validationErrors);
+ 
+    if (Object.keys(validationErrors).length > 0) {
+      return;
+    }
+ 
     setShowConfirm(true);
   }
 
@@ -137,6 +197,7 @@ function Recursos() {
     setTitle("");
     setCategory("");
     setLevel("");
+    setErrors({});
     setShowConfirm(false);
     setShowSuccess(true);
   }
@@ -195,14 +256,20 @@ function Recursos() {
             <button
               type="button"
               className={mode === "PDF" ? "tab active" : "tab"}
-              onClick={() => setMode("PDF")}
+              onClick={() => {
+                setMode("PDF");
+                setErrors({});
+              }}
             >
               Documento PDF
             </button>
             <button
               type="button"
               className={mode === "LINK" ? "tab active" : "tab"}
-              onClick={() => setMode("LINK")}
+              onClick={() => {
+                setMode("LINK");
+                setErrors({});
+              }}
             >
               Enlace externo
             </button>
@@ -239,47 +306,84 @@ function Recursos() {
                 style={{ display: "none" }}
                 onChange={handleFileChange}
               />
-            </>
+            {errors.file && <small className="field-error">{errors.file}</small>}
+          </>
           ) : (
-            <div className="link-input">
-              <input
-                placeholder="https://"
-                value={link}
-                onChange={(e) => setLink(e.target.value)}
-              />
-            </div>
+          <div className="link-input">
+            <input
+              placeholder="https://"
+              value={link}
+              onChange={(e) => {
+                  setLink(e.target.value);
+                  setErrors((prev) => ({ ...prev, link: "" }));
+              }}
+            />
+            {errors.link && <small className="field-error">{errors.link}</small>}
+          </div>
           )}
-
-          <label className="field-label">Título del recurso</label>
-          <input
-            className="text-input"
-            placeholder="Ej.: Guía de recursividad en Haskell"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
-
+ 
+          <label className={errors.title ? "field field-invalid" : "field"}>
+            <span className="field-label-text">
+              Título del recurso
+              <span className="required-mark" aria-hidden="true">*</span>
+            </span>
+            <input
+              className="text-input"
+              placeholder="Ej.: Guía de recursividad en Haskell"
+              value={title}
+              onChange={(e) => {
+                  setTitle(e.target.value);
+                  setErrors((prev) => ({ ...prev, title: "" }));
+              }}
+            />
+            {errors.title && <small className="field-error">{errors.title}</small>}
+          </label>
           <div className="row">
             <div className="col">
-              <label className="field-label">Categoría</label>
-              <select value={category} onChange={(e) => setCategory(e.target.value)}>
-                <option value="">Selecciona</option>
-                {THEME_OPTIONS.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
+              <label className={errors.category ? "field field-invalid" : "field"}>
+                <span className="field-label-text">
+                  Categoría
+                  <span className="required-mark" aria-hidden="true">*</span>
+                </span>
+                <select
+                  value={category}
+                  onChange={(e) => {
+                    setCategory(e.target.value);
+                    setErrors((prev) => ({ ...prev, category: "" }));
+                  }}
+                >
+                  <option value="">Selecciona</option>
+                  {THEME_OPTIONS.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+                {errors.category && <small className="field-error">{errors.category}</small>}
+              </label>
             </div>
             <div className="col">
-              <label className="field-label">Nivel recomendado</label>
-              <select value={level} onChange={(e) => setLevel(e.target.value)}>
-                <option value="">Selecciona</option>
-                {LEVEL_OPTIONS.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
+              <label className={errors.level ? "field field-invalid" : "field"}>
+                <span className="field-label-text">
+                  Nivel recomendado
+                  <span className="required-mark" aria-hidden="true">*</span>
+                </span>
+                <select
+                  value={level}
+                  onChange={(e) => {
+                    setLevel(e.target.value);
+                    setErrors((prev) => ({ ...prev, level: "" }));
+                  }}
+                >
+                  <option value="">Selecciona</option>
+                  {LEVEL_OPTIONS.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+                {errors.level && <small className="field-error">{errors.level}</small>}
+              </label>
             </div>
           </div>
 

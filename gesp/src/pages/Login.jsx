@@ -1,4 +1,5 @@
 ﻿import React, { useState } from "react";
+import { FiEye, FiEyeOff } from "react-icons/fi";
 import { Link, useNavigate } from "react-router-dom";
 import "./Login.css";
 
@@ -27,6 +28,7 @@ function Login({ onLoginSuccess }) {
   const [errors, setErrors] = useState({});
   const [message, setMessage] = useState("");
   const [showVerified, setShowVerified] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (event) => {
@@ -118,7 +120,10 @@ function Login({ onLoginSuccess }) {
 
             <form className="login-form" onSubmit={handleSubmit} noValidate>
               <label className={errors.email ? "field field-invalid" : "field"}>
-                <span>Correo electrónico</span>
+                <span className="field-label-text">
+                  Correo electrónico
+                  <span className="required-mark" aria-hidden="true">*</span>
+                </span>
                 <input
                   type="email"
                   name="email"
@@ -132,22 +137,40 @@ function Login({ onLoginSuccess }) {
 
               {mode === "login" && (
                 <label className={errors.password ? "field field-invalid" : "field"}>
-                  <span>Contraseña</span>
-                  <input
-                    type="password"
-                    name="password"
-                    placeholder="••••••••"
-                    value={values.password}
-                    onChange={handleChange}
-                    autoComplete="current-password"
-                  />
+                  <span className="field-label-text">
+                    Contraseña
+                    <span className="required-mark" aria-hidden="true">*</span>
+                  </span>
+                  <div className="password-input-wrap">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      name="password"
+                      placeholder="••••••••"
+                      value={values.password}
+                      onChange={handleChange}
+                      autoComplete="current-password"
+                    />
+                    <button
+                      type="button"
+                      className="password-toggle"
+                      onClick={() => setShowPassword((prev) => !prev)}
+                      aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                    >
+                      <span aria-hidden="true">
+                        {showPassword ? <FiEyeOff /> : <FiEye />}
+                      </span>
+                    </button>
+                  </div>
                   {errors.password && <small className="field-error">{errors.password}</small>}
                 </label>
               )}
 
               {mode === "verify" && (
                 <label className={errors.code ? "field field-invalid" : "field"}>
-                  <span>Código de verificación</span>
+                  <span className="field-label-text">
+                    Código de verificación
+                    <span className="required-mark" aria-hidden="true">*</span>
+                  </span>
                   <input
                     type="text"
                     name="code"
